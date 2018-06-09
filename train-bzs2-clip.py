@@ -61,7 +61,7 @@ def main():
         config = Config()
         config["batch_size"] = batch_size
         # config["clip"] = 5
-        config["dir_output"] = "results/tmptmptest/" + "renew-bz=" + str(batch_size) + "/"
+        config["dir_output"] = "results/tmptmptest/" + "trylr-bz=" + str(batch_size) + "/"
         # config['use_cnn'] = True
         # config['use_gru'] = use_gru
         # config['use_reg'] = use_reg

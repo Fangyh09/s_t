@@ -276,11 +276,12 @@ class NERModel(BaseModel):
                 # cell_bw = tf.contrib.rnn.GRUCell(self.config.hidden_size_gru)
             else:
                 for i in range(self.config.lstm_layers):
-                    stacked_rnn.append(tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm))
-                    stacked_bw_rnn.append(tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm))
-
-                # cell_fw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm)
-                # cell_bw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm)
+                    cell_fw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=self.config.input_keep_prob,
+                                                            output_keep_prob=self.config.output_keep_prob)
+                    cell_bw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=self.config.input_keep_prob,
+                                                            output_keep_prob=self.config.output_keep_prob)
+                    stacked_rnn.append(cell_fw)
+                    stacked_bw_rnn.append(cell_bw)
 
             mcell = tf.contrib.rnn.MultiRNNCell(stacked_rnn)
             mcell_bw = tf.contrib.rnn.MultiRNNCell(stacked_bw_rnn)

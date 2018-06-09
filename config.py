@@ -67,40 +67,40 @@ class Config():
     dim_char = 100
 
     # glove files
-    filename_glove = "data/glove.6B/glove.6B.{}d.txt".format(dim_word)
+    filename_glove = "/home/yinghong/project/tmp/s_t/data/glove.6B/glove.6B.{}d.txt".format(dim_word)
     # trimmed embeddings (created from glove_filename with build_data.py)
-    filename_trimmed = "data/glove.6B.{}d.trimmed.npz".format(dim_word)
+    filename_trimmed = "/home/yinghong/project/tmp/s_t/data/glove.6B.{}d.trimmed.npz".format(dim_word)
     use_pretrained = True
 
     # dataset
     if DEBUG_MODE:
-        filename_dev = "data/dev.eval.small.bieo"
-        filename_test = "data/dev.eval.small.bieo"
-        filename_train = "data/train.eval.small.bieo"
+        filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.small.bieo"
+        filename_test = "/home/yinghong/project/tmp/s_t/data/dev.eval.small.bieo"
+        filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.small.bieo"
     else:
-        filename_dev = "data/dev.eval.bieo"
-        filename_test = "data/dev.eval.bieo"
-        filename_train = "data/train.eval.bieo"
+        filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.bieo"
+        filename_test = "/home/yinghong/project/tmp/s_t/data/dev.eval.bieo"
+        filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.bieo"
 
 #filename_dev = filename_test = filename_train = "data/test.txt" # test
 
     max_iter = None # if not None, max number of examples in Dataset
 
     # vocab (created from dataset with build_data.py)
-    filename_words = "data/words.bieo.txt"
-    filename_tags = "data/tags.bieo.txt"
-    filename_chars = "data/chars.bieo.txt"
+    filename_words = "/home/yinghong/project/tmp/s_t/data/words.bieo.txt"
+    filename_tags = "/home/yinghong/project/tmp/s_t/data/tags.bieo.txt"
+    filename_chars = "/home/yinghong/project/tmp/s_t/data/chars.bieo.txt"
 
     # training
     train_embeddings = True
-    nepochs          = 1000
+    nepochs          = 50
     dropout          = 0.5
     batch_size       = 10
     lr_method        = "adam"
     lr               = 0.001
     lr_decay         = 0.9
     clip             = -1 # if negative, no clipping
-    nepoch_no_imprv  = 12
+    nepoch_no_imprv  = 20
 
     # model hyperparameters
     hidden_size_char = 100 # lstm on chars
@@ -122,37 +122,43 @@ class Config():
     output_keep_prob = 1.0
 
 
-    def __setitem__(self, key, value):
-        if key == "nepochs":
-            Config.nepochs = value
-        elif key == "dim_char":
-            Config.dim_char = value
-        elif key == "batch_size":
-            Config.batch_size = value
-        elif key == "lr_method":
-            Config.lr_method = value
-        elif key == "lr":
-            Config.lr = value
-        elif key == "dim_char":
-            Config.dim_char = value
-        elif key == "hidden_size_char":
-            Config.hidden_size_char = value
-        elif key == "hidden_size_lstm":
-            Config.hidden_size_lstm = value
-        elif key == "use_gru":
-            Config.use_gru = value
-        elif key == "use_cnn":
-            Config.use_cnn = value
-        elif key == "hidden_size_gru":
-            Config.hidden_size_gru = value
-        elif key == "lstm_layers":
-            Config.lstm_layers = value
-        elif key == "filter_sizes":
-            Config.filter_sizes = value
-        elif key == "dir_output":
-            Config.dir_output = value
-        elif key == "clip":
-            Config.clip = value
+    # def __setitem__(self, key, value):
+    #     if key == "nepochs":
+    #         Config.nepochs = value
+    #     elif key == "dim_char":
+    #         Config.dim_char = value
+    #     elif key == "batch_size":
+    #         Config.batch_size = value
+    #     elif key == "lr_method":
+    #         Config.lr_method = value
+    #     elif key == "lr":
+    #         Config.lr = value
+    #     elif key == "dim_char":
+    #         Config.dim_char = value
+    #     elif key == "hidden_size_char":
+    #         Config.hidden_size_char = value
+    #     elif key == "hidden_size_lstm":
+    #         Config.hidden_size_lstm = value
+    #     elif key == "use_gru":
+    #         Config.use_gru = value
+    #     elif key == "use_cnn":
+    #         Config.use_cnn = value
+    #     elif key == "hidden_size_gru":
+    #         Config.hidden_size_gru = value
+    #     elif key == "lstm_layers":
+    #         Config.lstm_layers = value
+    #     elif key == "filter_sizes":
+    #         Config.filter_sizes = value
+    #     elif key == "dir_output":
+    #         Config.dir_output = value
+    #     elif key == "clip":
+    #         Config.clip = value
+    #     elif key == "lr_decay":
+    #         Config.lr_decay = value
+    #     elif key == "nepoch_no_imprv":
+    #         Config.nepoch_no_imprv = value
+    #     else:
+    #         raise ValueError("not exist this attr")
 
     def dump(obj, fout=False):
         class Writer():

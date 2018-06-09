@@ -61,7 +61,7 @@ class BaseModel(object):
     def initialize_session(self):
         """Defines self.sess and initialize the variables"""
         self.logger.info("Initializing tf session")
-        config = tf.ConfigProto()
+        config = tf.ConfigProto(log_device_placement=True)
         config.gpu_options.allow_growth=True
         self.sess = tf.Session(config=config)
         # from tensorflow.python import debug as tf_debug
@@ -105,13 +105,14 @@ class BaseModel(object):
 
         from datetime import datetime
         now = datetime.now()
-        logdir = now.strftime("%Y%m%d-%H%M%S") + "/"
-        self.file_writer = tf.summary.FileWriter(self.config.dir_output + "train-" + logdir,
+        # logdir = "-" + now.strftime("%Y%m%d-%H%M%S") + "/"
+        logdir = ""
+        self.file_writer = tf.summary.FileWriter(self.config.dir_output + "train" + logdir,
                                                  self.sess.graph)
-        self.file_epoch_writer = tf.summary.FileWriter(self.config.dir_output + "test-" + logdir)
+        self.file_epoch_writer = tf.summary.FileWriter(self.config.dir_output + "test" + logdir)
 
 
-    def train(self, train, dev):
+    def train(self, train, dev, reporter=False):
         """Performs training with early stopping and lr exponential decay
 
         Args:
@@ -122,13 +123,16 @@ class BaseModel(object):
         best_score = 0
         nepoch_no_imprv = 0 # for early stopping
         self.add_summary() # tensorboard
-
+        decay_nums = 0
         for epoch in range(self.config.nepochs):
             self.logger.info("Epoch {:} out of {:}".format(epoch + 1,
                         self.config.nepochs))
 
             score = self.run_epoch(train, dev, epoch)
             self.config.lr *= self.config.lr_decay # decay learning rate
+
+            if reporter is not False:
+                reporter(timesteps_total=epoch, mean_accuracy=score)
 
             # early stopping and saving best parameters
             if score >= best_score:
@@ -138,6 +142,16 @@ class BaseModel(object):
                 self.logger.info("- new best score!")
             else:
                 nepoch_no_imprv += 1
+                # if decay_nums == 0:
+                #     self.config.lr = self.config.lr / (1 + self.config.lr_decay * decay_nums)
+                # else:
+                #     self.config.lr = self.config.lr * (1 + self.config.lr_decay * (decay_nums - 1)) / (
+                #                 1 + self.config.lr_decay * decay_nums)
+                # self.config.lr = self.config.lr * self.config.lr_decay
+                # print("===> lr decay=", self.config.lr)
+
+                # decay_nums += 1
+
                 if nepoch_no_imprv >= self.config.nepoch_no_imprv:
                     self.logger.info("- early stopping {} epochs without "\
                             "improvement".format(nepoch_no_imprv))
