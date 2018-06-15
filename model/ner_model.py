@@ -291,6 +291,19 @@ class NERModel(BaseModel):
                     sequence_length=self.sequence_lengths, dtype=tf.float32)
             output = tf.concat([output_fw, output_bw], axis=-1)
             output = tf.nn.dropout(output, self.dropout)
+            # tmp_output = tf.Print(output, [output, output.shape, 'any thing i want'], message='Debug message:')
+
+            # if self.config.self_attention:
+            #     initializer = tf.contrib.layers.xavier_initializer()
+            #     W_s2 = tf.get_variable('W_s2', shape=[self.r, self.d_a], initializer=initializer)
+            #     A = tf.nn.softmax(
+            #         tf.map_fn(
+            #             lambda x: tf.matmul(self.W_s2, x),
+            #             tf.tanh(
+            #                 tf.map_fn(
+            #                     lambda x: tf.matmul(self.W_s1, tf.transpose(x)),
+            #                     output))))
+            #     pass
 
         # with tf.variable_scope("bi-lstm", initializer=tf.orthogonal_initializer()):
         #     cell_fw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm)
@@ -524,6 +537,10 @@ class NERModel(BaseModel):
                     tag = self.idx_to_tag[wordidx]
                     fout.write(tag + "\n")
                 fout.write("\n")
+
+        # merge file
+        #  paste -d ' ' dev.eval result.txt > merge.txt
+        # :%s/\r//g
 
 
 

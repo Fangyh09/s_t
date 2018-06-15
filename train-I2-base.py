@@ -44,11 +44,13 @@ def main():
             setattr(config, key, val)
         # config["dir_output"] = ""
         setattr(config, "dir_output", "")
+        setattr(config, "nepochs", 1)
+
         model = NERModel(config)
         model.build()
         model.train(train, dev, reporter)
 
-    ray.init(num_gpus=1,num_cpus=2)
+    ray.init(num_gpus=7,num_cpus=2)
 
     tune.register_trainable("train_func", train_func)
 
@@ -71,21 +73,19 @@ def main():
             # "num_gpus": 1,
 
             "config": {
-                "batch_size": tune.grid_search([10, 15, 20]),
-                "nepochs": 1,
-                "use_reg": tune.grid_search([True, False]),
+                # "use_reg": tune.grid_search([False, True]),
                 "hidden_size_lstm": tune.grid_search([300, 400, 500]),
                 "hidden_size_char": tune.grid_search([30, 50, 100]),
                 "dim_char": tune.grid_search([30, 50, 100]),
-                "filter_sizes": tune.grid_search([[3,4,5], [3,4], [3,4,5]]),
-                "use_cnn": tune.grid_search([True, False]),
+                # "filter_sizes": tune.grid_search([[3], [3,4], [3,4,5]]),
+                # "use_cnn": tune.grid_search([True, False]),
                 "input_keep_prob": tune.grid_search([0.5, 1]),
                 "output_keep_prob": tune.grid_search([0.5, 1]),
-                "lstm_layers": tune.grid_search([1, 2, 5]),
-                "clip": tune.grid_search([0, 5, 10]),
-                "lr_method": tune.grid_search(["sgd", "adam", "adagrad", "rmsprop"]),
+                # "lstm_layers": tune.grid_search([1, 2, 5]),
+                "clip": tune.grid_search([0, 5]),
+                "lr_method": tune.grid_search(["adam", "sgd", "adagrad", "rmsprop"]),
                 "lr_decay": tune.grid_search([0.95, 0.9, 0.85, 0.8]),
-                "lr": tune.grid_search([0.015, 0.005, 0.001, 0.005]),
+                "lr": tune.grid_search([0.001, 0.005]),
 
                 # "resources": {"cpu": 1, "gpu": 1}
                 # "momentum": tune.grid_search([0.1, 0.2]),

@@ -1,6 +1,8 @@
 import os
 import tensorflow as tf
+from tensorflow.python import debug as tf_debug
 
+TF_DEBUG = True
 
 class BaseModel(object):
     """Generic class for general methods that are not specific to NER"""
@@ -65,7 +67,8 @@ class BaseModel(object):
         config.gpu_options.allow_growth=True
         self.sess = tf.Session(config=config)
         # from tensorflow.python import debug as tf_debug
-        # sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
+        if TF_DEBUG:
+            self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
         self.sess.run(tf.global_variables_initializer())
         self.saver = tf.train.Saver()
 
@@ -129,7 +132,8 @@ class BaseModel(object):
                         self.config.nepochs))
 
             score = self.run_epoch(train, dev, epoch)
-            self.config.lr *= self.config.lr_decay # decay learning rate
+            if self.config.decay_mode == "normal":
+                self.config.lr *= self.config.lr_decay # decay learning rate
 
             if reporter is not False:
                 reporter(timesteps_total=epoch, mean_accuracy=score)
@@ -147,9 +151,11 @@ class BaseModel(object):
                 # else:
                 #     self.config.lr = self.config.lr * (1 + self.config.lr_decay * (decay_nums - 1)) / (
                 #                 1 + self.config.lr_decay * decay_nums)
-                # self.config.lr = self.config.lr * self.config.lr_decay
+                if self.config.decay_mode == "greedy":
+                    self.config.lr = self.config.lr * self.config.lr_decay
                 # print("===> lr decay=", self.config.lr)
-
+                if self.config.decay_mode == "greedy-half":
+                    self.config.lr /= 2.0
                 # decay_nums += 1
 
                 if nepoch_no_imprv >= self.config.nepoch_no_imprv:

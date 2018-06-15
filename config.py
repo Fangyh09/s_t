@@ -5,7 +5,7 @@ from model.general_utils import get_logger
 from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
         get_processing_word
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 
 class Config():
@@ -120,6 +120,9 @@ class Config():
     lstm_layers = 1
     input_keep_prob = 1.0
     output_keep_prob = 1.0
+
+    decay_mode = "normal" #normal, none, greedy, greedy-half
+    self_attention = False
 
 
     # def __setitem__(self, key, value):
