@@ -17,7 +17,7 @@ class Writer:
 
 def main(fname):
     if DEBUG_MODE:
-        fname = "../dev.eval"
+        fname = "../util/dev.eval"
     fout_name = fname + ".ebieo"
     if not os.path.exists(fname):
         raise ValueError(fname + "not exist")
