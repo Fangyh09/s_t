@@ -94,20 +94,20 @@ def main():
             best_score = score
             best_conf = config
             print("===> new best_score %f", best_score)
-            config.dump()
+            # config.dump()
             # print("==|> current best_score %f" % best_score)
             fout.write("\n==|> score %f\n" % score)
-            best_conf.dump(fout=fout)
+            # best_conf.dump(fout=fout)
         else:
             print("==|> score %f" % score)
-            config.dump()
+            # config.dump()
 
         # if score >= 75:
         #     fout.write("\n==|> score %f\n" % score)
         #     config.dump(fout=fout)
 
     print("current best_score %f", best_score)
-    best_conf.dump()
+    # best_conf.dump()
 
 
 if __name__ == "__main__":

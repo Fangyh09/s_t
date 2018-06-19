@@ -128,35 +128,34 @@ class Config():
     d_a = 300
 
 
-    def dump(obj, fout=False):
-        class Writer():
-            def __init__(self, fout=False):
-                self.fout = fout
-
-            def write(self, key, val):
-                if self.fout:
-                    self.fout.write(key + "=" + val + "\n")
-                    self.fout.flush()
-                else:
-                    print(key, val)
-
-
-        writer = Writer(fout)
-        # for attr in dir(obj)
-        writer.write("Config.nepochs", str(Config.nepochs))
-        writer.write("Config.dim_char", str(Config.dim_char))
-        writer.write("Config.batch_size", str(Config.batch_size))
-        writer.write("Config.lr_method", str(Config.lr_method))
-        writer.write("Config.lr", str(Config.lr))
-        writer.write("Config.dim_char", str(Config.dim_char))
-        writer.write("Config.hidden_size_char", str(Config.hidden_size_char))
-        writer.write("Config.hidden_size_lstm", str(Config.hidden_size_lstm))
-        writer.write("Config.use_gru", str(Config.use_gru))
-        writer.write("Config.use_cnn", str(Config.use_cnn))
-        writer.write("Config.hidden_size_gru", str(Config.hidden_size_gru))
-        writer.write("Config.lstm_layers", str(Config.lstm_layers))
-        writer.write("Config.filter_sizes", str(Config.filter_sizes))
-        writer.write("Config.clip", str(Config.clip))
+    # def dump(obj, fout=False):
+    #     class Writer():
+    #         def __init__(self, fout=False):
+    #             self.fout = fout
+    #
+    #         def write(self, key, val):
+    #             if self.fout:
+    #                 self.fout.write(key + "=" + val + "\n")
+    #                 self.fout.flush()
+    #             else:
+    #                 print(key, val)
+    #
+    #     writer = Writer(fout)
+    #     # for attr in dir(obj)
+    #     writer.write("Config.nepochs", str(Config.nepochs))
+    #     writer.write("Config.dim_char", str(Config.dim_char))
+    #     writer.write("Config.batch_size", str(Config.batch_size))
+    #     writer.write("Config.lr_method", str(Config.lr_method))
+    #     writer.write("Config.lr", str(Config.lr))
+    #     writer.write("Config.dim_char", str(Config.dim_char))
+    #     writer.write("Config.hidden_size_char", str(Config.hidden_size_char))
+    #     writer.write("Config.hidden_size_lstm", str(Config.hidden_size_lstm))
+    #     writer.write("Config.use_gru", str(Config.use_gru))
+    #     writer.write("Config.use_cnn", str(Config.use_cnn))
+    #     writer.write("Config.hidden_size_gru", str(Config.hidden_size_gru))
+    #     writer.write("Config.lstm_layers", str(Config.lstm_layers))
+    #     writer.write("Config.filter_sizes", str(Config.filter_sizes))
+    #     writer.write("Config.clip", str(Config.clip))
 
 
 
