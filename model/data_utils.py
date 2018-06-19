@@ -41,7 +41,7 @@ class CoNLLDataset(object):
 
     """
     def __init__(self, filename, processing_word=None, processing_tag=None,
-                 max_iter=None):
+                 max_iter=None, test=False):
         """
         Args:
             filename: path to the file
@@ -55,6 +55,7 @@ class CoNLLDataset(object):
         self.processing_tag = processing_tag
         self.max_iter = max_iter
         self.length = None
+        self.test = test
 
 
     def __iter__(self):
@@ -75,8 +76,9 @@ class CoNLLDataset(object):
                     word, tag = ls[0],ls[-1]
                     if self.processing_word is not None:
                         word = self.processing_word(word)
-                    if self.processing_tag is not None:
-                        tag = self.processing_tag(tag)
+                    if not self.test:
+                        if self.processing_tag is not None:
+                            tag = self.processing_tag(tag)
                     words += [word]
                     tags += [tag]
 
@@ -104,10 +106,12 @@ def get_vocabs(datasets):
     print("Building vocab...")
     vocab_words = set()
     vocab_tags = set()
-    for dataset in datasets:
+    for dataset in datasets[:-1]:
         for words, tags in dataset:
             vocab_words.update(words)
             vocab_tags.update(tags)
+    for words, tags in datasets[-1]:
+        vocab_words.update(words)
     print("- done. {} tokens".format(len(vocab_words)))
     return vocab_words, vocab_tags
 

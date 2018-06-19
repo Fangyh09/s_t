@@ -1,6 +1,7 @@
 from model.data_utils import CoNLLDataset
 from model.ner_model import NERModel
 from config import Config
+import os
 
 
 def align_data(data):
@@ -65,39 +66,56 @@ input> I love Paris""")
         for key, seq in to_print.items():
             model.logger.info(seq)
 
-
-def main2():
-    # create instance of config
-    config = Config()
-
-    # build model
-    model = NERModel(config)
-    model.build()
-    model.restore_session(config.dir_model)
-
-    # create dataset
-    test  = CoNLLDataset(config.filename_test, config.processing_word,
-                         config.processing_tag, config.max_iter)
-
-    # evaluate and interact
-    model.evaluate(test)
+#
+# def main2():
+#     # create instance of config
+#     config = Config()
+#
+#     # build model
+#     model = NERModel(config)
+#     model.build()
+#     model.restore_session(config.dir_model)
+#
+#     # create dataset
+#     test  = CoNLLDataset(config.filename_test, config.processing_word,
+#                          config.processing_tag, config.max_iter)
+#
+#     # evaluate and interact
+#     model.evaluate(test)
     interactive_shell(model)
 
 def main():
     # create instance of config
     config = Config()
 
+    pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/final/exp-final-epoch30" \
+                    "/train_func_0_2018-06-16_01-24-13vmtghosb"
+
+
+    config_path = os.path.join(pretrain_path, "params.json")
+    with open(config_path) as fin:
+        content = fin.read().replace('\n', '')
+        import json
+        j = json.loads(content)
+        for (key, val) in j.items():
+            setattr(config, key, val)
+
     # build model
     model = NERModel(config)
     model.build()
-    model.restore_session(config.dir_model)
+
+    model.restore_session(os.path.join(pretrain_path, "results/tmptmptest/bz=10-training-"
+                                                      "bieo-nocnn/model.weights/"))
 
     # create dataset
-    test  = CoNLLDataset(config.filename_test, config.processing_word,
+    # test  = CoNLLDataset(config.filename_test, config.processing_word,
+    #                      config.processing_tag, config.max_iter)
+    dev   = CoNLLDataset(config.filename_dev, config.processing_word,
                          config.processing_tag, config.max_iter)
 
+
     # evaluate and interact
-    model.tmp(test)
+    model.tmp(dev, outfile="result-dev.txt")
     interactive_shell(model)
 
 

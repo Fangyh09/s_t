@@ -253,6 +253,36 @@ class NERModel(BaseModel):
 
         self.word_embeddings = tf.nn.dropout(word_embeddings, self.dropout)
 
+        # if self.config.use_chars:
+        #     hidden_dim = self.config.hidden_size_char * 2 + self.config.dim_word
+        # else:
+        #     hidden_dim = self.config.dim_word
+        #
+        # if self.config.self_attention:
+        #     initializer = tf.contrib.layers.xavier_initializer()
+        #
+        #     W_s1 = tf.get_variable('W_s1', shape=[self.config.d_a, hidden_dim],
+        #                            initializer=initializer)
+        #     # shape(W_s2) = r * d_a
+        #     W_s2 = tf.get_variable('W_s2', shape=[self.config.r, self.config.d_a],
+        #                            initializer=initializer)
+        #
+        #     A = tf.nn.softmax(
+        #         tf.map_fn(
+        #             lambda x: tf.matmul(W_s2, x),
+        #             tf.tanh(
+        #                 tf.map_fn(
+        #                     lambda x: tf.matmul(W_s1, tf.transpose(x)),
+        #                     self.word_embeddings))))
+        #     M = tf.matmul(A, self.word_embeddings)
+        #     A_T = tf.transpose(A, perm=[0, 2, 1])
+        #     tile_eye = tf.tile(tf.eye(self.config.r), [self.config.batch_size, 1])
+        #     tile_eye = tf.reshape(tile_eye, [-1, self.config.r, self.config.r])
+        #     AA_T = tf.matmul(A, A_T) - tile_eye
+        #     P = tf.square(tf.norm(AA_T, axis=[-2, -1], ord='fro'))
+        #     self.loss_P = P
+        #     self.word_embeddings = M
+        #     pass
 
     def add_logits_op(self):
         """Defines self.logits
@@ -263,6 +293,8 @@ class NERModel(BaseModel):
         with tf.variable_scope("bi-lstm", initializer=tf.orthogonal_initializer()):
             stacked_rnn = []
             stacked_bw_rnn = []
+
+
             if self.config.use_gru:
                 for i in range(self.config.lstm_layers):
                     cell_fw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.GRUCell(self.config.hidden_size_gru), input_keep_prob=self.config.input_keep_prob,
@@ -291,19 +323,37 @@ class NERModel(BaseModel):
                     sequence_length=self.sequence_lengths, dtype=tf.float32)
             output = tf.concat([output_fw, output_bw], axis=-1)
             output = tf.nn.dropout(output, self.dropout)
+
             # tmp_output = tf.Print(output, [output, output.shape, 'any thing i want'], message='Debug message:')
 
             # if self.config.self_attention:
             #     initializer = tf.contrib.layers.xavier_initializer()
-            #     W_s2 = tf.get_variable('W_s2', shape=[self.r, self.d_a], initializer=initializer)
+            #
+            #     W_s1 = tf.get_variable('W_s1', shape=[self.config.d_a, 2 * hidden_dim],
+            #                                 initializer=initializer)
+            #     # shape(W_s2) = r * d_a
+            #     W_s2 = tf.get_variable('W_s2', shape=[self.config.r, self.config.d_a],
+            #                                 initializer=initializer)
+            #
             #     A = tf.nn.softmax(
             #         tf.map_fn(
-            #             lambda x: tf.matmul(self.W_s2, x),
+            #             lambda x: tf.matmul(W_s2, x),
             #             tf.tanh(
             #                 tf.map_fn(
-            #                     lambda x: tf.matmul(self.W_s1, tf.transpose(x)),
+            #                     lambda x: tf.matmul(W_s1, tf.transpose(x)),
             #                     output))))
+            #     M = tf.matmul(A, output)
+            #     A_T = tf.transpose(A, perm=[0, 2, 1])
+            #     tile_eye = tf.tile(tf.eye(self.config.r), [self.config.batch_size, 1])
+            #     tile_eye = tf.reshape(tile_eye, [-1, self.config.r, self.config.r])
+            #     AA_T = tf.matmul(A, A_T) - tile_eye
+            #     P = tf.square(tf.norm(AA_T, axis=[-2, -1], ord='fro'))
+            #     self.loss_P = P
+            #     output = M
             #     pass
+            # else:
+            #     output = tf.nn.dropout(output, self.dropout)
+        # self.loss += P
 
         # with tf.variable_scope("bi-lstm", initializer=tf.orthogonal_initializer()):
         #     cell_fw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm)
@@ -325,6 +375,7 @@ class NERModel(BaseModel):
             nsteps = tf.shape(output)[1]
             output = tf.reshape(output, [-1, 2*self.config.hidden_size_lstm])
             pred = tf.matmul(output, W) + b
+
             self.logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
 
 
@@ -344,6 +395,7 @@ class NERModel(BaseModel):
 
     def add_loss_op(self):
         """Defines the loss"""
+        # self.loss = 0
         if self.config.use_crf:
             log_likelihood, trans_params = tf.contrib.crf.crf_log_likelihood(
                     self.logits, self.labels, self.sequence_lengths)
@@ -361,12 +413,16 @@ class NERModel(BaseModel):
             tv = tf.trainable_variables()
             regularization_cost = tf.reduce_sum([tf.nn.l2_loss(v) for v in tv])
             self.loss += self.config.reg_ratio * regularization_cost
+
+        if self.config.self_attention:
+           self.loss += self.loss_P
         tf.summary.scalar("loss", self.loss)
 
 
     def build(self):
         # tf.reset_default_graph()
         # NER specific functions
+
         self.add_placeholders()
         self.add_word_embeddings_op()
         self.add_logits_op()
@@ -535,6 +591,9 @@ class NERModel(BaseModel):
             for sent in list(labels_pred):
                 for wordidx in list(sent):
                     tag = self.idx_to_tag[wordidx]
+                    # tbd add for bieo
+                    if tag[0] == 'E':
+                        tag = "O"
                     fout.write(tag + "\n")
                 fout.write("\n")
 

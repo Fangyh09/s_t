@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 from tensorflow.python import debug as tf_debug
 
-TF_DEBUG = True
+TF_DEBUG = False
 
 class BaseModel(object):
     """Generic class for general methods that are not specific to NER"""
@@ -82,15 +82,17 @@ class BaseModel(object):
 
         """
         self.logger.info("Reloading the latest trained model...")
-        self.saver.restore(self.sess, dir_model)
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
 
 
-    def save_session(self):
+    def save_session(self, epoch=""):
         """Saves session = weights"""
         if not os.path.exists(self.config.dir_model):
             os.makedirs(self.config.dir_model)
-        self.saver.save(self.sess, self.config.dir_model)
-
+        if epoch != "":
+            self.saver.save(self.sess, self.config.dir_model, global_step=epoch)
+        else:
+            self.saver.save(self.sess, self.config.dir_model)
 
     def close_session(self):
         """Closes the session"""
@@ -134,6 +136,9 @@ class BaseModel(object):
             score = self.run_epoch(train, dev, epoch)
             if self.config.decay_mode == "normal":
                 self.config.lr *= self.config.lr_decay # decay learning rate
+            elif self.config.decay_mode == "4normal":
+                if epoch % 4 == 0:
+                    self.config.lr *= self.config.lr_decay
 
             if reporter is not False:
                 reporter(timesteps_total=epoch, mean_accuracy=score)
@@ -141,7 +146,7 @@ class BaseModel(object):
             # early stopping and saving best parameters
             if score >= best_score:
                 nepoch_no_imprv = 0
-                self.save_session()
+                self.save_session(epoch=epoch)
                 best_score = score
                 self.logger.info("- new best score!")
             else:

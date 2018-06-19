@@ -14,9 +14,16 @@ def main2():
     # create instance of config
     config = Config()
 
+
     # build model
     model = NERModel(config)
     model.build()
+    pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/final/" \
+                    "exp-final-epoch30-sgd/train_func_0_2018-06-15_14-18-14bqpn6jv1"
+
+
+    model.restore_session(os.path.join(pretrain_path, "results/tmptmptest/bz=10-training-"
+                                                      "bieo-nocnn/model.weights/"))
 # model.restore_session("results/crf/model.weights/") # optional, restore weights
 #model.reinitialize_weights("proj")
 
@@ -49,9 +56,12 @@ def main():
         #     # config[key] = val
         #     setattr(config, key[3:], val)
         # config["dir_output"] = ""
-        setattr(config, "dir_output", "")
+        setattr(config, "dir_output", "pretrain")
         setattr(config, "nepochs", 50)
-        setattr(config, "batch_size", 50)
+        setattr(config, "batch_size", 80)
+
+        pretrain_path = _config["30-pretrain_path"]
+        PRETRAIN_MODE = _config["31-pretrain_mode"]
 
         if PRETRAIN_MODE:
             config_path = os.path.join(pretrain_path, "params.json")
@@ -71,9 +81,9 @@ def main():
         model.train(train, dev, reporter)
 
     # ray.init(redis_address="192.168.1.201:20198")
-    ray.init(num_cpus=1, num_gpus=1)
+    ray.init(num_cpus=1, num_gpus=2)
 
-    tune.register_trainable("train_func", train_func)
+    tune.register_trainable("train_func_final", train_func)
 
     # with tf.variable_scope("train_step"):
     #     if _lr_m == 'adam':  # sgd method
@@ -144,36 +154,36 @@ def main():
         #         # "momentum": tune.grid_search([0.1, 0.2]),
         #     }
         # },
-        "exp-pretrain-epoch50": {
-            "run": "train_func",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/debug",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            # "num_gpus": 1,
-
-            "config": {
-                # "00-use_reg": tune.grid_search([False, True]),
-                # "03-hidden_size_lstm": 300,
-                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
-                # "05-hidden_size_char": 100,
-                # # "07-dim_char": tune.grid_search([100, 50, 30]),
-                # "07-dim_char": 100,
-                # "09-filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
-                # "11-use_cnn": True,
-                # "13-input_keep_prob": 1,
-                # "15-output_keep_prob": 1,
-                # "17-lstm_layers": 2,
-                # "19-clip": 5,
-                # "21-lr_method": "adam",
-                # "23-lr_decay": 0.9,
-                "25-lr": 0.001,
-                # "27-decay_mode": tune.grid_search(["normal", "greedy", "greedy-half"])
-                # "25-lr": tune.grid_search([0.001, 0.005]),
-
-                # "resources": {"cpu": 1, "gpu": 1}
-                # "momentum": tune.grid_search([0.1, 0.2]),
-            }
-        },
+        # "exp-pretrain-epoch50": {
+        #     "run": "train_func",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/debug",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         # "09-filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
+        #         # "11-use_cnn": True,
+        #         # "13-input_keep_prob": 1,
+        #         # "15-output_keep_prob": 1,
+        #         # "17-lstm_layers": 2,
+        #         # "19-clip": 5,
+        #         # "21-lr_method": "adam",
+        #         # "23-lr_decay": 0.9,
+        #         "25-lr": 0.001,
+        #         # "27-decay_mode": tune.grid_search(["normal", "greedy", "greedy-half"])
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
         # "exp-debug-epoch50": {
         #     "run": "train_func",
         #     "stop": {"mean_accuracy": 99},
@@ -297,9 +307,75 @@ def main():
         #     }
         # },
 
+        "exp-final-epoch30": {
+            "run": "train_func_final",
+            "stop": {"mean_accuracy": 99},
+            "local_dir": "./ray_results/06-17",
+            "trial_resources": {'cpu': 0, 'gpu': 1},
+            # "num_gpus": 1,
+
+            "config": {
+                # "00-use_reg": tune.grid_search([False, True]),
+                # "03-hidden_size_lstm": 300,
+                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+                # "05-hidden_size_char": 100,
+                # # "07-dim_char": tune.grid_search([100, 50, 30]),
+                # "07-dim_char": 100,
+                "17-lstm_layers": 2,
+                "19-clip": 5,
+                "21-lr_method": "adam",
+                "23-lr_decay": 0.9,
+                "25-lr": 0.001 * 0.9 * 0.5,
+                "27-decay_mode": "none",
+                # "25-lr": tune.grid_search([0.001, 0.005]),
+                # "30-pretrain_path": "/home/yinghong/project/tmp/s_t/ray_results"
+                #                     "/final/exp-final-epoch30/train_func_final_0_2018-06-16_11-25-108pdtoaw3",
+                # "30-pretrain_path": "/home/yinghong/project/tmp/s_t/ray_resultsts"
+                #                     "/final/exp-final-epoch30/train_func_final_0_2018-06-16_14-27-17h_wrdl_9",
+                # "30-pretrain_path": "/home/yinghong/project/tmp/s_t/ray_results"
+                #                     "/06-17/exp-final-epoch30/train_func_final_0_2018-06-17_10-01-131zbjl322",
+                "30-pretrain_path": "/home/yinghong/project/tmp/s_t/ray_results"
+                                    "/06-17/exp-final-epoch30/train_func_final_0_2018-06-17_11-41-242ciyu4yq",
+                "31-pretrain_mode": True
+
+                # "resources": {"cpu": 1, "gpu": 1}
+                # "momentum": tune.grid_search([0.1, 0.2]),
+            }
+        },
+        # "exp-final-epoch30-sgd": {
+        #     "run": "train_func_final",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/final",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "sgd",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.015 * 0.8,
+        #         "27-decay_mode": "none",
+        #         "30-pretrain_path": "/home/yinghong/project/tmp/s_t/ray_results/"
+        #                             "06-17/exp-final-epoch30-sgd/train_func_final_0_2018-06-17_10-14-20e72lmeo4/",
+        #
+        #         "31-pretrain_mode": True
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
+
     })
 
 
 
 if __name__ == "__main__":
-    main2()
+    main()

@@ -5,7 +5,7 @@ from model.general_utils import get_logger
 from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
         get_processing_word
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 
 class Config():
@@ -75,11 +75,11 @@ class Config():
     # dataset
     if DEBUG_MODE:
         filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.small.bieo"
-        filename_test = "/home/yinghong/project/tmp/s_t/data/dev.eval.small.bieo"
+        filename_test = "/home/yinghong/project/tmp/s_t/data/test.eval.small"
         filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.small.bieo"
     else:
         filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.bieo"
-        filename_test = "/home/yinghong/project/tmp/s_t/data/dev.eval.bieo"
+        filename_test = "/home/yinghong/project/tmp/s_t/data/test.eval"
         filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.bieo"
 
 #filename_dev = filename_test = filename_train = "data/test.txt" # test
@@ -109,20 +109,23 @@ class Config():
     # NOTE: if both chars and crf, only 1.6x slower on GPU
     use_crf = True  # if crf, training is 1.7x slower on CPU
     use_chars = True  # if char embedding, training is 3.5x slower on CPU
-    use_gru = False
     use_cnn = False
+    filter_sizes = [3, 4, 5]
+
     use_reg = False
     reg_ratio = 0.001
 
-    filter_sizes = [3, 4, 5]
+    use_gru = False
     hidden_size_gru = 300
 
     lstm_layers = 1
     input_keep_prob = 1.0
     output_keep_prob = 1.0
 
-    decay_mode = "normal" #normal, none, greedy, greedy-half
+    decay_mode = "normal" #normal, none, greedy, greedy-half, 4normal
     self_attention = False
+    r = 20
+    d_a = 300
 
 
     # def __setitem__(self, key, value):

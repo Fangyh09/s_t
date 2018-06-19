@@ -53,7 +53,7 @@ def main():
     # ray.init(redis_address="192.168.1.201:20198")
     ray.init(num_cpus=1, num_gpus=2)
 
-    tune.register_trainable("train_func", train_func)
+    tune.register_trainable("train_func_final", train_func)
 
     # with tf.variable_scope("train_step"):
     #     if _lr_m == 'adam':  # sgd method
@@ -124,128 +124,128 @@ def main():
         #         # "momentum": tune.grid_search([0.1, 0.2]),
         #     }
         # },
-        "exp-go2-epoch50-04": {
-            "run": "train_func",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/go1",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            # "num_gpus": 1,
-
-            "config": {
-                # "00-use_reg": tune.grid_search([False, True]),
-                # "03-hidden_size_lstm": 300,
-                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
-                # "05-hidden_size_char": 100,
-                # # "07-dim_char": tune.grid_search([100, 50, 30]),
-                # "07-dim_char": 100,
-                "09-filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
-                "11-use_cnn": True,
-                "13-input_keep_prob": 1,
-                "15-output_keep_prob": 1,
-                "17-lstm_layers": 2,
-                "19-clip": 5,
-                "21-lr_method": "adam",
-                "23-lr_decay": 0.9,
-                "25-lr": 0.001,
-                "27-decay_mode": tune.grid_search(["normal", "greedy", "greedy-half"])
-                # "25-lr": tune.grid_search([0.001, 0.005]),
-
-                # "resources": {"cpu": 1, "gpu": 1}
-                # "momentum": tune.grid_search([0.1, 0.2]),
-            }
-        },
-        "exp-go2-epoch50-03": {
-            "run": "train_func",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/go1",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            # "num_gpus": 1,
-
-            "config": {
-                # "00-use_reg": tune.grid_search([False, True]),
-                # "03-hidden_size_lstm": 300,
-                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
-                # "05-hidden_size_char": 100,
-                # # "07-dim_char": tune.grid_search([100, 50, 30]),
-                # "07-dim_char": 100,
-                "09-filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
-                "11-use_cnn": True,
-                "13-input_keep_prob": 1,
-                "15-output_keep_prob": 1,
-                "17-lstm_layers": 2,
-                "19-clip": 5,
-                "21-lr_method": "sgd",
-                "23-lr_decay": 0.9,
-                "25-lr": 0.1,
-                "27-decay_mode": "greedy-half"
-                # "25-lr": tune.grid_search([0.001, 0.005]),
-
-                # "resources": {"cpu": 1, "gpu": 1}
-                # "momentum": tune.grid_search([0.1, 0.2]),
-            }
-        },
-        "exp-go2-epoch50-02": {
-            "run": "train_func",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/go1",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            # "num_gpus": 1,
-
-            "config": {
-                # "00-use_reg": tune.grid_search([False, True]),
-                # "03-hidden_size_lstm": 300,
-                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
-                # "05-hidden_size_char": 100,
-                # # "07-dim_char": tune.grid_search([100, 50, 30]),
-                # "07-dim_char": 100,
-                "09-filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
-                "11-use_cnn": True,
-                "13-input_keep_prob": 1,
-                "15-output_keep_prob": 1,
-                "17-lstm_layers": 2,
-                "19-clip": 5,
-                "21-lr_method": "adam",
-                "23-lr_decay": 0.9,
-                "25-lr": 0.001,
-                "27-decay_mode": tune.grid_search(["normal", "greedy", "greedy-half"]),
-                "29-use_crf": False
-                # "25-lr": tune.grid_search([0.001, 0.005]),
-
-                # "resources": {"cpu": 1, "gpu": 1}
-                # "momentum": tune.grid_search([0.1, 0.2]),
-            }
-        },
-        "exp-go2-epoch50-01": {
-            "run": "train_func",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/go1",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            # "num_gpus": 1,
-
-            "config": {
-                # "00-use_reg": tune.grid_search([False, True]),
-                # "03-hidden_size_lstm": 300,
-                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
-                # "05-hidden_size_char": 100,
-                # # "07-dim_char": tune.grid_search([100, 50, 30]),
-                # "07-dim_char": 100,
-                "09-filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
-                "11-use_cnn": True,
-                "13-input_keep_prob": 1,
-                "15-output_keep_prob": 1,
-                "17-lstm_layers": 2,
-                "19-clip": 5,
-                "21-lr_method": "sgd",
-                "23-lr_decay": 0.9,
-                "25-lr": 0.1,
-                "27-decay_mode": "greedy-half",
-                "29-use_crf": False
-                # "25-lr": tune.grid_search([0.001, 0.005]),
-
-                # "resources": {"cpu": 1, "gpu": 1}
-                # "momentum": tune.grid_search([0.1, 0.2]),
-            }
-        },
+        # "exp-go2-epoch50-04": {
+        #     "run": "train_func",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/go1",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "09-filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
+        #         "11-use_cnn": True,
+        #         "13-input_keep_prob": 1,
+        #         "15-output_keep_prob": 1,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "adam",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.001,
+        #         "27-decay_mode": tune.grid_search(["normal", "greedy", "greedy-half"])
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
+        # "exp-go2-epoch50-03": {
+        #     "run": "train_func",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/go1",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "09-filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+        #         "11-use_cnn": True,
+        #         "13-input_keep_prob": 1,
+        #         "15-output_keep_prob": 1,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "sgd",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.1,
+        #         "27-decay_mode": "greedy-half"
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
+        # "exp-go2-epoch50-02": {
+        #     "run": "train_func",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/go1",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "09-filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+        #         "11-use_cnn": True,
+        #         "13-input_keep_prob": 1,
+        #         "15-output_keep_prob": 1,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "adam",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.001,
+        #         "27-decay_mode": tune.grid_search(["normal", "greedy", "greedy-half"]),
+        #         "29-use_crf": False
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
+        # "exp-go2-epoch50-01": {
+        #     "run": "train_func",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/go1",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "09-filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+        #         "11-use_cnn": True,
+        #         "13-input_keep_prob": 1,
+        #         "15-output_keep_prob": 1,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "sgd",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.1,
+        #         "27-decay_mode": "greedy-half",
+        #         "29-use_crf": False
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
         # "exp-go3": {
         #     "run": "train_func",
         #     "stop": {"mean_accuracy": 99},
@@ -432,6 +432,85 @@ def main():
         #         "25-lr": 0.003,
         #         "27-decay_mode": tune.grid_search(["normal"]),
         #         "29-use_crf": False
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
+        #
+        # "exp-final-epoch30": {
+        #     "run": "train_func_final",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/06-17",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "adam",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.001,
+        #         "27-decay_mode": "none",
+        #         # "25-lr": tune.grid_search([0.001, 0.005]),
+        #
+        #         # "resources": {"cpu": 1, "gpu": 1}
+        #         # "momentum": tune.grid_search([0.1, 0.2]),
+        #     }
+        # },
+        "exp-final-epoch30-sgd": {
+            "run": "train_func_final",
+            "stop": {"mean_accuracy": 99},
+            "local_dir": "./ray_results/06-17",
+            "trial_resources": {'cpu': 0, 'gpu': 1},
+            # "num_gpus": 1,
+
+            "config": {
+                # "00-use_reg": tune.grid_search([False, True]),
+                # "03-hidden_size_lstm": 300,
+                # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+                # "05-hidden_size_char": 100,
+                # # "07-dim_char": tune.grid_search([100, 50, 30]),
+                # "07-dim_char": 100,
+                "17-lstm_layers": 2,
+                "19-clip": 5,
+                "21-lr_method": "sgd",
+                "23-lr_decay": 0.9,
+                "25-lr": 0.015,
+                "27-decay_mode": "none",
+                # "25-lr": tune.grid_search([0.001, 0.005]),
+
+                # "resources": {"cpu": 1, "gpu": 1}
+                # "momentum": tune.grid_search([0.1, 0.2]),
+            }
+        },
+        # "exp-final-epoch30-sgd": {
+        #     "run": "train_func",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/final",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     # "num_gpus": 1,
+        #
+        #     "config": {
+        #         # "00-use_reg": tune.grid_search([False, True]),
+        #         # "03-hidden_size_lstm": 300,
+        #         # # "05-hidden_size_char": tune.grid_search([100, 50, 30]),
+        #         # "05-hidden_size_char": 100,
+        #         # # "07-dim_char": tune.grid_search([100, 50, 30]),
+        #         # "07-dim_char": 100,
+        #         "17-lstm_layers": 2,
+        #         "19-clip": 5,
+        #         "21-lr_method": "sgd",
+        #         "23-lr_decay": 0.9,
+        #         "25-lr": 0.015,
+        #         "27-decay_mode": "4normal",
         #         # "25-lr": tune.grid_search([0.001, 0.005]),
         #
         #         # "resources": {"cpu": 1, "gpu": 1}
