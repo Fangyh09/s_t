@@ -12,6 +12,7 @@ class NERModel(BaseModel):
     """Specialized class of Model for NER"""
 
     def __init__(self, config):
+        tf.set_random_seed(1529457577)
         super(NERModel, self).__init__(config)
         self.idx_to_tag = {idx: tag for tag, idx in
                            self.config.vocab_tags.items()}

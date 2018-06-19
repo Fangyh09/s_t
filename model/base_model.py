@@ -134,6 +134,7 @@ class BaseModel(object):
                         self.config.nepochs))
 
             score = self.run_epoch(train, dev, epoch)
+
             if self.config.decay_mode == "normal":
                 self.config.lr *= self.config.lr_decay # decay learning rate
             elif self.config.decay_mode == "4normal":

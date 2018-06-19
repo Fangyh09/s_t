@@ -8,9 +8,15 @@
 - [ ] 使用Elmo
 - [ ] 增加attention
 - [ ] bie, bieo格式，其他格式
-- [ ] reverse 文件
+- [x] reverse 文件
 - [x] check文件
+- [ ] cross validation
+- [ ] shuffle
 - [ ] 测试gru
+- [ ] 跑github代码
+
+    https://github.com/IsaacChanghau/neural_sequence_labeling
+    
 - [ ] 训练模型，生成结果
     - [ ] 自动训练100轮非CNN版本`[adam, lr=1e-3, decay=0.9/0.95]`
     

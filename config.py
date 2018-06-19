@@ -7,7 +7,6 @@ from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
 
 DEBUG_MODE = False
 
-
 class Config():
     def __init__(self, load=True):
         """Initialize hyperparameters and load vocabs
@@ -72,6 +71,8 @@ class Config():
     filename_trimmed = "/home/yinghong/project/tmp/s_t/data/glove.6B.{}d.trimmed.npz".format(dim_word)
     use_pretrained = True
 
+    reverse = True
+
     # dataset
     if DEBUG_MODE:
         filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.small.bieo"
@@ -82,15 +83,30 @@ class Config():
         filename_test = "/home/yinghong/project/tmp/s_t/data/test.eval"
         filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.bieo"
 
+    if reverse:
+        filename_dev += ".reverse"
+        filename_test += ".reverse"
+        filename_train += ".reverse"
+
 #filename_dev = filename_test = filename_train = "data/test.txt" # test
 
     max_iter = None # if not None, max number of examples in Dataset
 
     # vocab (created from dataset with build_data.py)
-    filename_words = "/home/yinghong/project/tmp/s_t/data/words.bieo.txt"
-    filename_tags = "/home/yinghong/project/tmp/s_t/data/tags.bieo.txt"
-    filename_chars = "/home/yinghong/project/tmp/s_t/data/chars.bieo.txt"
-
+    if reverse:
+        filename_words = "/home/yinghong/project/tmp/s_t/data/words.bieo" \
+                         ".reverse.txt"
+        filename_tags = "/home/yinghong/project/tmp/s_t/data/tags.bieo" \
+                        ".reverse.txt"
+        filename_chars = "/home/yinghong/project/tmp/s_t/data/chars.bieo" \
+                         ".reverse.txt"
+    else:
+        filename_words = "/home/yinghong/project/tmp/s_t/data/words.bieo" \
+                         ".txt"
+        filename_tags = "/home/yinghong/project/tmp/s_t/data/tags.bieo" \
+                        ".txt"
+        filename_chars = "/home/yinghong/project/tmp/s_t/data/chars.bieo" \
+                         ".txt"
     # training
     train_embeddings = True
     nepochs          = 50
