@@ -128,44 +128,6 @@ class Config():
     d_a = 300
 
 
-    # def __setitem__(self, key, value):
-    #     if key == "nepochs":
-    #         Config.nepochs = value
-    #     elif key == "dim_char":
-    #         Config.dim_char = value
-    #     elif key == "batch_size":
-    #         Config.batch_size = value
-    #     elif key == "lr_method":
-    #         Config.lr_method = value
-    #     elif key == "lr":
-    #         Config.lr = value
-    #     elif key == "dim_char":
-    #         Config.dim_char = value
-    #     elif key == "hidden_size_char":
-    #         Config.hidden_size_char = value
-    #     elif key == "hidden_size_lstm":
-    #         Config.hidden_size_lstm = value
-    #     elif key == "use_gru":
-    #         Config.use_gru = value
-    #     elif key == "use_cnn":
-    #         Config.use_cnn = value
-    #     elif key == "hidden_size_gru":
-    #         Config.hidden_size_gru = value
-    #     elif key == "lstm_layers":
-    #         Config.lstm_layers = value
-    #     elif key == "filter_sizes":
-    #         Config.filter_sizes = value
-    #     elif key == "dir_output":
-    #         Config.dir_output = value
-    #     elif key == "clip":
-    #         Config.clip = value
-    #     elif key == "lr_decay":
-    #         Config.lr_decay = value
-    #     elif key == "nepoch_no_imprv":
-    #         Config.nepoch_no_imprv = value
-    #     else:
-    #         raise ValueError("not exist this attr")
-
     def dump(obj, fout=False):
         class Writer():
             def __init__(self, fout=False):

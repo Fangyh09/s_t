@@ -45,9 +45,7 @@ def main():
     train = CoNLLDataset(default_config.filename_train, default_config.processing_word,
                          default_config.processing_tag, default_config.max_iter)
 
-    pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/go1-old/exp-go3/train_f" \
-                    "unc_72_00-use_reg=False,13-input_keep_prob=1,15-output_keep_prob=1," \
-                    "17-lstm_layers=1,19-clip=5,25-lr=0.003_2018-06-13_05-15-32e44db7z5"
+
     # @ray.remote(num_gpus=1)
     def train_func(_config, reporter):
         # tf.reset_default_graph()
