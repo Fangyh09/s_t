@@ -43,32 +43,32 @@ def main():
     # ray.init(redis_address="192.168.1.201:20198")
     ray.init(num_cpus=1, num_gpus=2)
 
-    tune.register_trainable("randomtest", train_func)
+    tune.register_trainable("finaltrain100iter", train_func)
 
     tune.run_experiments({
-        # "02-NoCNN": {
-        #     "run": "train100iter",
-        #     "stop": {"mean_accuracy": 99},
-        #     "local_dir": "./ray_results/06-19",
-        #     "trial_resources": {'cpu': 0, 'gpu': 1},
-        #     "config": {
-        #         "lstm_layers": 2,
-        #         "clip": tune.grid_search([5, 0]),
-        #         "lr_decay": tune.grid_search([0.9, 0.95])
-        #
-        #     }
-        # },
-        # "01-HasCNN": {
-        #     "run": "train100iter",
-        #     "stop": {"mean_accuracy": 99},
-        #     "local_dir": "./ray_results/06-19",
-        #     "trial_resources": {'cpu': 0, 'gpu': 1},
-        #     "config": {
-        #         "lstm_layers": 2,
-        #         # "clip": tune.grid_search([0, 5]),
-        #         "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
-        #     }
-        # },
+        "02-NoCNN": {
+            "run": "finaltrain100iter",
+            "stop": {"mean_accuracy": 99},
+            "local_dir": "./ray_results/06-19",
+            "trial_resources": {'cpu': 0, 'gpu': 1},
+            "config": {
+                "lstm_layers": 2,
+                "clip": tune.grid_search([5, 0]),
+                "lr_decay": tune.grid_search([0.9, 0.95])
+
+            }
+        },
+        "01-HasCNN": {
+            "run": "finaltrain100iter",
+            "stop": {"mean_accuracy": 99},
+            "local_dir": "./ray_results/06-19",
+            "trial_resources": {'cpu': 0, 'gpu': 1},
+            "config": {
+                "lstm_layers": 2,
+                # "clip": tune.grid_search([0, 5]),
+                "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
+            }
+        },
         # "ReverseOrNot": {
         #     "run": "trainreverse",
         #     "stop": {"mean_accuracy": 99},
@@ -81,18 +81,30 @@ def main():
         #         "reverse": tune.grid_search([False, True])
         #     }
         # },
-        "RandomTest": {
-            "run": "randomtest",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/randomtest",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            "config": {
-                "lstm_layers": 2,
-                "lr_decay": 0.9,
-                "clip": 5,
-                "reverse": tune.grid_search([False, True])
-            }
-        },
+        # "RandomTest": {
+        #     "run": "randomtest",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/randomtest",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         "lr_decay": 0.9,
+        #         "clip": 5,
+        #         "reverse": tune.grid_search([False, True])
+        #     }
+        # },
+        # "RealHasCNN": {
+        #     "run": "finaltrain100iter",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/06-19",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         "use_cnn": True,
+        #         "clip": tune.grid_search([0, 5]),
+        #         "filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+        #     }
+        # },
     })
 
 

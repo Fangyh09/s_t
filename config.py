@@ -58,7 +58,7 @@ class Config():
     # general config
     file_name = os.path.basename(__file__)
     dir_output = "results/tmptmptest/" + "bz=10-training-bieo-nocnn" + "/"
-    dir_model  = dir_output + "model.weights/"
+    dir_model  = dir_output + "model.weights/final-model"
     path_log   = dir_output + "log.txt"
 
     # embeddings

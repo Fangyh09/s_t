@@ -87,44 +87,25 @@ input> I love Paris""")
 def main():
     # create instance of config
     config = Config()
-    prefix = "/home/yinghong/project/tmp/s_t/ray_results"
-    # pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/final/exp-final-epoch30" \
-    #                 "/train_func_0_2018-06-16_01-24-13vmtghosb"
-    # pretrain_path = \
-        # os.path.join(prefix,"06-17/exp-final-epoch30/train_func_fi"
-        #                     "nal_0_2018-06-17_11-41-242ciyu4yq")
-    # pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/go1-old/exp" \
-                    # "-go3/normal3"
-    # pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/final/exp-final-epo" \
-    #                 "ch30/train_func_final_0_2018-06-16_10-38-30qfc8b21c"
 
-    # config_path = os.path.join(pretrain_path, "params.json")
-    # with open(config_path) as fin:
-    #     content = fin.read().replace('\n', '')
-    #     import json
-    #     j = json.loads(content)
-    #     for (key, val) in j.items():
-    #         setattr(config, key, val)
-    # setattr(config, "lstm_layers", 2)
-    # setattr(config, "clip", 5)
+    pretrain_path = "/home/yinghong/project/tmp/s_t/ray_results/final/exp-final-epoch30" \
+                    "/train_func_0_2018-06-16_01-24-13vmtghosb"
+
+
+    config_path = os.path.join(pretrain_path, "params.json")
+    with open(config_path) as fin:
+        content = fin.read().replace('\n', '')
+        import json
+        j = json.loads(content)
+        for (key, val) in j.items():
+            setattr(config, key, val)
+
     # build model
-    setattr(config, "lstm_layers", 2)
-
-    setattr(config, "nepochs", 100)
-
-    import datetime
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
-    dir_output = "results/finalrun/" + "main_layer2/" + date_str + "/"
-    setattr(config, "dir_output", dir_output)
-    setattr(config, "dir_model", dir_output + "model.weights/finalmodel")
-    setattr(config, "path_log", dir_output + "log.txt")
-
     model = NERModel(config)
     model.build()
 
-    model.restore_session("/home/yinghong/project/tmp/s_t/results/finalrun"
-                          "/main_layer2/2018-06-20-18-02/model.weights/final"
-                          "-model")
+    model.restore_session(os.path.join(pretrain_path, "results/tmptmptest/bz=10-training-"
+                                                      "bieo-nocnn/model.weights/"))
 
     # create dataset
     # test  = CoNLLDataset(config.filename_test, config.processing_word,
@@ -134,8 +115,8 @@ def main():
 
 
     # evaluate and interact
-    model.tmp(dev, outfile="result-dev-goo.txt")
-    # interactive_shell(model)
+    model.tmp(dev, outfile="result-dev.txt")
+    interactive_shell(model)
 
 
 
@@ -153,37 +134,10 @@ def extract_data(fname):
         ls = x.split(' ')
         fout.write(ls[0] + "\n")
 
-def pretrain():
-    config = Config()
-    pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/02-NoCNN/finaltrain100" \
-                    "iter_0_clip=5,lr_decay=0.9_2018-06-20_19-18-584gvnojdo"
 
-
-    config_path = os.path.join(pretrain_path, "params.json")
-    with open(config_path) as fin:
-        content = fin.read().replace('\n', '')
-        import json
-        j = json.loads(content)
-        for (key, val) in j.items():
-            setattr(config, key, val)
-    model = NERModel(config)
-    model.build()
-
-    model.restore_session(
-        os.path.join(pretrain_path, "results/tmptmptest/bz=10-training-"
-                                    "bieo-nocnn/model.weights/"))
-
-    # create dataset
-    # test  = CoNLLDataset(config.filename_test, config.processing_word,
-    #                      config.processing_tag, config.max_iter)
-    dev = CoNLLDataset(config.filename_dev, config.processing_word,
-                       config.processing_tag, config.max_iter)
-
-    # evaluate and interact
-    model.tmp(dev, outfile="result-dev-google.txt")
 
 if __name__ == "__main__":
-    pretrain()
+    main()
 
     # creat trim
     # dev_name = "dev.eval"

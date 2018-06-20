@@ -87,12 +87,15 @@ class BaseModel(object):
 
     def save_session(self, epoch=""):
         """Saves session = weights"""
+        import datetime
+        date_str = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
         if not os.path.exists(self.config.dir_model):
-            os.makedirs(self.config.dir_model)
-        if epoch != "":
-            self.saver.save(self.sess, self.config.dir_model, global_step=epoch)
-        else:
-            self.saver.save(self.sess, self.config.dir_model)
+            os.makedirs(self.config.dir_model+date_str)
+        # if epoch != "":
+        #     self.saver.save(self.sess, self.config.dir_model,
+        #                     global_step=epoch)
+        # else:
+        self.saver.save(self.sess, self.config.dir_model+date_str)
 
     def close_session(self):
         """Closes the session"""
