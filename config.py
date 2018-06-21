@@ -60,8 +60,9 @@ class Config():
 
     # general config
     file_name = os.path.basename(__file__)
-    dir_output = "results/tmptmptest/" + "bz=10-training-bieo-nocnn" + "/"
-    dir_model  = dir_output + "model.weights/final-model"
+    dir_output = "rayresults/elmo/tmptmptest/" + "bz=10-training-bieo-nocnn" \
+                 + "/"
+    dir_model  = dir_output + "model.weights/elmo-model"
     path_log   = dir_output + "log.txt"
 
     # embeddings
@@ -74,7 +75,7 @@ class Config():
     filename_trimmed = "/home/yinghong/project/tmp/s_t/data/glove.6B.{}d.trimmed.npz".format(dim_word)
     use_pretrained = True
 
-    reverse = True
+    reverse = False
     # force to False
     cv = False
 

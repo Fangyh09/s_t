@@ -45,13 +45,15 @@ class NERModel(BaseModel):
         self.lr = tf.placeholder(dtype=tf.float32, shape=[],
                         name="lr")
 
+        self.elmo_embedding = tf.placeholder(dtype=tf.float32, shape=[None, None, None],
+                        name="lr")
 
         # self.max_length_word = tf.placeholder(dtype=tf.int32, shape=[],
         #                 name="max_length_word")
         # print(type(self.max_length_word))
 
 
-    def get_feed_dict(self, words, orig_words, labels=None, lr=None,
+    def get_feed_dict(self, words, elmo_embedding, labels=None, lr=None,
                       dropout=None):
         """Given some data, pad it and build a feed dictionary
 
@@ -99,6 +101,7 @@ class NERModel(BaseModel):
         feed = {
             self.word_ids: word_ids,
             self.sequence_lengths: sequence_lengths,
+            self.elmo_embedding: elmo_embedding
             # self.words: orig_words
         }
         # alog.info(orig_words)
@@ -260,8 +263,10 @@ class NERModel(BaseModel):
                     output = tf.reshape(output,
                                         shape=[s[0], s[1], 2 * self.config.hidden_size_char])
                     word_embeddings = tf.concat([word_embeddings, output], axis=-1)
-
-
+        self.elmo_embedding = tf.reshape(self.elmo_embedding, shape=[s[0],
+                                                                     s[1],
+                                                                     1024 * 3])
+        word_embeddings = tf.concat([word_embeddings, self.elmo_embedding], axis=-1)
         self.word_embeddings = tf.nn.dropout(word_embeddings, self.dropout)
 
         # if self.config.use_chars:
@@ -448,7 +453,7 @@ class NERModel(BaseModel):
 #self.restore_session(path)
 
 
-    def predict_batch(self, words, withprob=False):
+    def predict_batch(self, words, elmo_embedding, withprob=False):
         """
         Args:
             words: list of sentences
@@ -459,7 +464,8 @@ class NERModel(BaseModel):
 
         """
         # prepare data
-        fd, sequence_lengths = self.get_feed_dict(words, dropout=1.0)
+        fd, sequence_lengths = self.get_feed_dict(words, elmo_embedding,
+                                                  dropout=1.0)
 
         if self.config.use_crf:
             # get tag scores and transition params of CRF
@@ -486,7 +492,7 @@ class NERModel(BaseModel):
             return labels_pred, sequence_lengths
 
 
-    def run_epoch(self, train, dev, epoch):
+    def run_epoch(self, train, dev, epoch, elmo):
         """Performs one complete pass over the train set and evaluate on dev
 
         Args:
@@ -500,13 +506,16 @@ class NERModel(BaseModel):
         """
         # progbar stuff for logging
         batch_size = self.config.batch_size
-        nbatches = (len(train) + batch_size - 1) // batch_size
+        # hack it
+        # nbatches = (len(train) + batch_size - 1) // batch_size
+        nbatches = (11421 + batch_size - 1) // batch_size
         prog = Progbar(target=nbatches)
 
         # iterate over dataset
-        for i, (words, labels, orig_words) in enumerate(minibatches(train,
-                                                             batch_size)):
-            fd, _ = self.get_feed_dict(words, orig_words, labels,
+        for i, (words, labels, elmo_embedding) in enumerate(minibatches(train,
+                                                             batch_size, elmo)):
+            # print("hahaha, I got it!!!!!!!!!")
+            fd, _ = self.get_feed_dict(words, elmo_embedding, labels,
                                        self.config.lr,
                     self.config.dropout)
 
@@ -521,7 +530,7 @@ class NERModel(BaseModel):
             # if i % 100 == 0:
             #     self.file_writer.flush()
 
-        metrics = self.run_evaluate(dev)
+        metrics = self.run_evaluate(dev, elmo)
 
         summary = tf.Summary()
         summary.value.add(tag="acc", simple_value=metrics["acc"])
@@ -537,7 +546,7 @@ class NERModel(BaseModel):
         return metrics["f1"]
 
 
-    def run_evaluate(self, test):
+    def run_evaluate(self, test, elmo):
         """Evaluates performance on test set
 
         Args:
@@ -549,9 +558,10 @@ class NERModel(BaseModel):
         """
         accs = []
         correct_preds, total_correct, total_preds = 0., 0., 0.
-        for words, labels, orig_words in minibatches(test,
-                                                   self.config.batch_size):
-            labels_pred, sequence_lengths = self.predict_batch(words)
+        for words, labels, elmo_embedding in minibatches(test,
+                                                   self.config.batch_size,
+                                                     elmo):
+            labels_pred, sequence_lengths = self.predict_batch(words, elmo_embedding)
 
             for lab, lab_pred, length in zip(labels, labels_pred,
                                              sequence_lengths):

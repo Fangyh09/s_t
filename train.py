@@ -1,10 +1,5 @@
-import ray
-import ray.tune as tune
+# import pudb; pu.db
 from allennlp.commands.elmo import ElmoEmbedder
-
-from config import Config
-from model.data_utils import CoNLLDataset
-from model.ner_model import NERModel
 
 
 # 4. get elmo
@@ -26,6 +21,23 @@ from model.ner_model import NERModel
 
 def main():
 
+    options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
+    weight_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
+
+    print("loadding elmo")
+    elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
+    print("finish loading")
+
+    print("ok??????????????????????")
+    elmo_embedding = elmo.embed_sentence(["I", "Love", "You"])
+    print("ok!!!!!!!!!!!!!!!!!!!!")
+
+    from config import Config
+    from model.data_utils import CoNLLDataset
+    from model.ner_model import NERModel
+    import ray
+    import ray.tune as tune
+
     def train_func(_config, reporter):
         # tf.reset_default_graph()
         config = Config()
@@ -45,12 +57,13 @@ def main():
                              config.processing_word,
                              config.processing_tag,
                              config.max_iter)
-        model.train(train, dev, reporter)
+        model.train(train, dev, elmo, reporter)
 
     # ray.init(redis_address="192.168.1.201:20198")
-    ray.init(num_cpus=1, num_gpus=2)
+    import os
+    ray.init(num_cpus=1, num_gpus=1)
 
-    tune.register_trainable("finaltrain100iter", train_func)
+    tune.register_trainable("elmo_train", train_func)
 
     tune.run_experiments({
         # "02-NoCNN": {
@@ -127,16 +140,28 @@ def main():
         #     }
         # },
 
-        "RealHasCNN-try2": {
-            "run": "finaltrain100iter",
+        # "RealHasCNN-try2": {
+        #     "run": "finaltrain100iter",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/06-19",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         "use_cnn": True,
+        #         "lr_method": "adam",
+        #         "filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+        #     }
+        # },
+
+        "01-HasCNN": {
+            "run": "elmo_train",
             "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/06-19",
+            "local_dir": "./ray_results/elmo_train",
             "trial_resources": {'cpu': 0, 'gpu': 1},
             "config": {
                 "lstm_layers": 2,
-                "use_cnn": True,
-                "lr_method": "adam",
-                "filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+                # "clip": tune.grid_search([0, 5]),
+                # "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
             }
         },
     })
@@ -152,22 +177,37 @@ def main2():
     elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
     print("finish loading")
 
-    config = Config()
+    print("ok??????????????????????")
+    elmo_embedding = elmo.embed_sentence(["I", "Love", "You"])
+    print("ok!!!!!!!!!!!!!!!!!!!!")
 
+    from config import Config
+    from model.data_utils import CoNLLDataset
+    from model.ner_model import NERModel
+    import ray
+    import ray.tune as tune
+
+    config = Config()
+    # setattr(config, "dir_output", "")
+    setattr(config, "nepochs", 100)
+    setattr(config, "lstm_layers", 2)
     # build model
     model = NERModel(config)
     model.build()
 # model.restore_session("results/crf/model.weights/") # optional, restore weights
 #model.reinitialize_weights("proj")
 
+
     # create datasets
-    dev   = CoNLLDataset(config.filename_dev, elmo, config.processing_word,
+
+    # elmo = 1
+    dev   = CoNLLDataset(config.filename_dev, config.processing_word,
                          config.processing_tag, config.max_iter)
-    train = CoNLLDataset(config.filename_train, elmo, config.processing_word,
+    train = CoNLLDataset(config.filename_train, config.processing_word,
                          config.processing_tag, config.max_iter)
 
     # train model
-    model.train(train, dev)
+    model.train(train, dev, elmo)
 
 
 if __name__ == "__main__":

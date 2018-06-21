@@ -14,7 +14,6 @@ class MyIOError(Exception):
         # custom error message
         message = """
 ERROR: Unable to locate file {}.
-
 FIX: Have you tried running python build_data.py first?
 This will build vocab file from your train, test and dev sets and
 trimm your word vectors.
@@ -22,9 +21,9 @@ trimm your word vectors.
         super(MyIOError, self).__init__(message)
 
 
+
 class CoNLLDataset(object):
     """Class that iterates over CoNLL Dataset
-
     __iter__ method yields a tuple (words, tags)
         words: list of raw words
         tags: list of raw tags
@@ -40,7 +39,7 @@ class CoNLLDataset(object):
         ```
 
     """
-    def __init__(self, filename, elmo, processing_word=None,
+    def __init__(self, filename, processing_word=None,
                  processing_tag=None,
                  max_iter=None, test=False):
         """
@@ -57,7 +56,6 @@ class CoNLLDataset(object):
         self.max_iter = max_iter
         self.length = None
         self.test = test
-        self.elmo = elmo
 
 
     def __iter__(self):
@@ -65,7 +63,7 @@ class CoNLLDataset(object):
         with open(self.filename) as f:
             words, tags = [], []
             orig_words = []
-            elmo_embedding = []
+            # elmo_embedding = []
             for line in f:
                 line = line.strip()
                 if (len(line) == 0 or line.startswith("-DOCSTART-")):
@@ -74,12 +72,15 @@ class CoNLLDataset(object):
                         if self.max_iter is not None and niter > self.max_iter:
                             break
                         # todo remote it
-                        use_elmo = True
-                        if use_elmo:
-                            elmo_embedding = self.elmo.embed_sentence(
-                                orig_words)
-
-                        yield words, tags, elmo_embedding
+                        # use_elmo = True
+                        # if use_elmo:
+                        #\
+                        # embedding = self.elmo.embed_sentence(orig_words)
+                        # embedding = np.transpose(embedding, (1, 0, 2))
+                        # embedding = embedding.reshape(embedding.shape[0], -1)
+                        # print("embedding shape", embedding.shape)
+                        # yield words, tags, embedding
+                        yield words, tags, orig_words
                         words, tags = [], []
                         orig_words = []
                 else:
@@ -357,7 +358,7 @@ def pad_sequences(sequences, pad_tok, nlevels=1):
     return sequence_padded, sequence_length
 
 
-def minibatches(data, minibatch_size):
+def minibatches(data, minibatch_size, elmo):
     """
     Args:
         data: generator of (sentence, tags) tuples
@@ -367,13 +368,21 @@ def minibatches(data, minibatch_size):
         list of tuples
 
     """
-    import algo
-    algo.info("!!! I am here")
+    # import alog
+    # alog.info("!!! I am here")
     x_batch, y_batch = [], []
     z_batch = []
     for (x, y, z) in data:
         if len(x_batch) == minibatch_size:
-            yield x_batch, y_batch, z_batch
+            activations, mask = elmo.batch_to_embeddings(z_batch)
+            activations = np.transpose(activations, (0, 2, 1, 3))
+            activations = activations.reshape(activations.shape[0],
+                                              activations.shape[1],
+                                              -1)
+            z_batch = activations.cpu().numpy()
+            # print("shape", z_batch.shape)
+            yield x_batch, y_batch, z_batch.tolist()
+
             x_batch, y_batch = [], []
             z_batch = []
 
@@ -383,11 +392,20 @@ def minibatches(data, minibatch_size):
         x_batch += [x]
         y_batch += [y]
         z_batch += [z]
-    z_batch = np.array(z_batch)
-    algo.info("!!! I am out")
+
+
+    # z_batch = np.array(z_batch)
+    # alog.info("!!! I am out")
 
     if len(x_batch) != 0:
-        yield x_batch, y_batch, z_batch
+        activations, mask = elmo.batch_to_embeddings(z_batch)
+        activations = np.transpose(activations, (0, 2, 1, 3))
+        activations = activations.reshape(activations.shape[0],
+                                          activations.shape[1],
+                                          -1)
+        z_batch = activations.cpu().numpy()
+        # print("shape", z_batch.shape)
+        yield x_batch, y_batch, z_batch.tolist()
 
 
 def get_chunk_type(tok, idx_to_tag):

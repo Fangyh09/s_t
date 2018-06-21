@@ -64,7 +64,7 @@ class BaseModel(object):
     def initialize_session(self):
         """Defines self.sess and initialize the variables"""
         self.logger.info("Initializing tf session")
-        config = tf.ConfigProto(log_device_placement=True)
+        config = tf.ConfigProto(log_device_placement=False)
         config.gpu_options.allow_growth=True
         self.sess = tf.Session(config=config)
         # from tensorflow.python import debug as tf_debug
@@ -98,13 +98,16 @@ class BaseModel(object):
         """Saves session = weights"""
         import datetime
         date_str = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
-        if not os.path.exists(self.config.dir_model):
+        if not os.path.exists(self.config.dir_model+date_str):
             os.makedirs(self.config.dir_model+date_str)
+        # if not os.path.exists(self.config.dir_model):
+        #     os.makedirs(self.config.dir_model)
         # if epoch != "":
         #     self.saver.save(self.sess, self.config.dir_model,
         #                     global_step=epoch)
         # else:
         self.saver.save(self.sess, self.config.dir_model+date_str)
+        # self.saver.save(self.sess, self.config.dir_model)
 
     def close_session(self):
         """Closes the session"""
@@ -129,7 +132,7 @@ class BaseModel(object):
         self.file_epoch_writer = tf.summary.FileWriter(self.config.dir_output + "test" + logdir)
 
 
-    def train(self, train, dev, reporter=False):
+    def train(self, train, dev, elmo, reporter=False):
         """Performs training with early stopping and lr exponential decay
 
         Args:
@@ -145,7 +148,7 @@ class BaseModel(object):
             self.logger.info("Epoch {:} out of {:}".format(epoch + 1,
                         self.config.nepochs))
 
-            score = self.run_epoch(train, dev, epoch)
+            score = self.run_epoch(train, dev, epoch, elmo)
 
             if self.config.decay_mode == "normal":
                 self.config.lr *= self.config.lr_decay # decay learning rate
