@@ -1,4 +1,5 @@
 import os
+
 import tensorflow as tf
 from tensorflow.python import debug as tf_debug
 
@@ -82,6 +83,14 @@ class BaseModel(object):
 
         """
         self.logger.info("Reloading the latest trained model...")
+        # meta = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/01" \
+        #        "-HasCNN/try85.63/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/final-model2018-06-20-21-08.meta" \
+        #        ""
+        # self.saver = tf.train.import_meta_graph(meta)
+        # self.saver.restore(self.sess,
+        #                    "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/01-HasCNN/try85.63/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/"
+        #                    "final-model2018-06-20-21-08")
+
         self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
 
 

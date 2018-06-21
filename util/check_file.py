@@ -16,6 +16,7 @@ def check_str(line, mode):
     :param line: after remove
     :return:
     """
+    line = line.strip()
     ls = line.split(' ')
     word, tag = ls[0], ls[-1]
     if mode == BIO_MODE:
@@ -34,7 +35,8 @@ def main(fname, mode):
     with open(fname) as f:
         state = 0
         for line in f:
-            line = line.strip()
+            line = line.strip('\n')
+
             if state == 0:
                 if len(line) == 0:
                     return False

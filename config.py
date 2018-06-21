@@ -1,9 +1,8 @@
 import os
 
-
-from model.general_utils import get_logger
 from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
-        get_processing_word
+    get_processing_word
+from model.general_utils import get_logger
 
 DEBUG_MODE = False
 
@@ -72,6 +71,8 @@ class Config():
     use_pretrained = True
 
     reverse = True
+    cv = False
+
 
     # dataset
     if DEBUG_MODE:
@@ -82,6 +83,11 @@ class Config():
         filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.bieo"
         filename_test = "/home/yinghong/project/tmp/s_t/data/test.eval"
         filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.bieo"
+
+    if cv:
+        filename_dev += ".cv"
+        filename_test += ".cv"
+        filename_train += ".cv"
 
     if reverse:
         filename_dev += ".reverse"
@@ -107,6 +113,11 @@ class Config():
                         ".txt"
         filename_chars = "/home/yinghong/project/tmp/s_t/data/chars.bieo" \
                          ".txt"
+    if cv:
+        filename_words += ".cv"
+        filename_tags += ".cv"
+        filename_chars += ".cv"
+
     # training
     train_embeddings = True
     nepochs          = 50
@@ -142,7 +153,6 @@ class Config():
     self_attention = False
     r = 20
     d_a = 300
-
 
     # def dump(obj, fout=False):
     #     class Writer():

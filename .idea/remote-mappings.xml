@@ -3,7 +3,7 @@
   <component name="RemoteMappingsManager">
     <list>
       <list>
-        <remote-mappings server-id="python@sftp://yinghong@yuliang:22000/home/yinghong/.pyenv/versions/3.6.2/envs/env3.6.2/bin/python3" />
+        <remote-mappings server-id="python@sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python" />
       </list>
     </list>
   </component>

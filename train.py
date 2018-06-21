@@ -1,10 +1,10 @@
-from model.data_utils import CoNLLDataset
-from model.ner_model import NERModel
-from config import Config
-from tensorflow.python import debug as tf_debug
-import tensorflow as tf
 import ray
 import ray.tune as tune
+
+from config import Config
+from model.data_utils import CoNLLDataset
+from model.ner_model import NERModel
+
 
 # usage
 # "use_reg": tune.grid_search([False, True]),
@@ -21,11 +21,6 @@ import ray.tune as tune
 
 
 def main():
-    default_config = Config()
-    dev = CoNLLDataset(default_config.filename_dev, default_config.processing_word,
-                       default_config.processing_tag, default_config.max_iter)
-    train = CoNLLDataset(default_config.filename_train, default_config.processing_word,
-                         default_config.processing_tag, default_config.max_iter)
 
     def train_func(_config, reporter):
         # tf.reset_default_graph()
@@ -38,6 +33,14 @@ def main():
 
         model = NERModel(config)
         model.build()
+        dev = CoNLLDataset(config.filename_dev,
+                           config.processing_word,
+                           config.processing_tag,
+                           config.max_iter)
+        train = CoNLLDataset(config.filename_train,
+                             config.processing_word,
+                             config.processing_tag,
+                             config.max_iter)
         model.train(train, dev, reporter)
 
     # ray.init(redis_address="192.168.1.201:20198")
@@ -46,29 +49,43 @@ def main():
     tune.register_trainable("finaltrain100iter", train_func)
 
     tune.run_experiments({
-        "02-NoCNN": {
-            "run": "finaltrain100iter",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/06-19",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            "config": {
-                "lstm_layers": 2,
-                "clip": tune.grid_search([5, 0]),
-                "lr_decay": tune.grid_search([0.9, 0.95])
+        # "02-NoCNN": {
+        #     "run": "finaltrain100iter",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/06-19",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         "clip": tune.grid_search([5, 0]),
+        #         "lr_decay": tune.grid_search([0.9, 0.95])
+        #
+        #     }
+        # },
+        # "01-HasCNN": {
+        #     "run": "finaltrain100iter",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/06-19",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         # "clip": tune.grid_search([0, 5]),
+        #         "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
+        #     }
+        # },
+        # "02-CV-NoCNN": {
+        #     "run": "finaltrain100iter",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/06-19",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         "clip": tune.grid_search([5, 0]),
+        #         # "lr_decay": tune.grid_search([0.9, 0.95]),
+        #         "cv": True, # by hand
+        #         # "reverse": tune.grid_search([True, False])
+        #     }
+        # },
 
-            }
-        },
-        "01-HasCNN": {
-            "run": "finaltrain100iter",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/06-19",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            "config": {
-                "lstm_layers": 2,
-                # "clip": tune.grid_search([0, 5]),
-                "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
-            }
-        },
         # "ReverseOrNot": {
         #     "run": "trainreverse",
         #     "stop": {"mean_accuracy": 99},
@@ -105,6 +122,18 @@ def main():
         #         "filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
         #     }
         # },
+        "RealHasCNN-try2": {
+            "run": "finaltrain100iter",
+            "stop": {"mean_accuracy": 99},
+            "local_dir": "./ray_results/06-19",
+            "trial_resources": {'cpu': 0, 'gpu': 1},
+            "config": {
+                "lstm_layers": 2,
+                "use_cnn": True,
+                "lr_method": "adam",
+                "filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
+            }
+        },
     })
 
 

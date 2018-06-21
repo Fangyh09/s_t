@@ -1,9 +1,0 @@
-2018-06-20 19:32:31,417:INFO: Initializing tf session
-2018-06-20 19:32:34,507:INFO: Reloading the latest trained model...
-2018-06-20 19:32:34,517:INFO: Restoring parameters from /home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/02-NoCNN/finaltrain100iter_0_clip=5,lr_decay=0.9_2018-06-20_19-18-584gvnojdo/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/final-model2018-06-20-19-29
-2018-06-20 19:32:59,167:INFO: Initializing tf session
-2018-06-20 19:33:02,461:INFO: Reloading the latest trained model...
-2018-06-20 19:33:02,477:INFO: Restoring parameters from /home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/02-NoCNN/finaltrain100iter_0_clip=5,lr_decay=0.9_2018-06-20_19-18-584gvnojdo/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/final-model2018-06-20-19-29
-2018-06-20 19:40:54,338:INFO: Initializing tf session
-2018-06-20 19:41:00,748:INFO: Reloading the latest trained model...
-2018-06-20 19:41:00,850:INFO: Restoring parameters from /home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/02-NoCNN/finaltrain100iter_0_clip=5,lr_decay=0.9_2018-06-20_19-18-584gvnojdo/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/final-model2018-06-20-19-29

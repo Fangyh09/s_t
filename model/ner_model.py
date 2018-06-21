@@ -1,11 +1,10 @@
 import numpy as np
-import os
 import tensorflow as tf
+from tqdm import tqdm
 
-
+from .base_model import BaseModel
 from .data_utils import minibatches, pad_sequences, get_chunks
 from .general_utils import Progbar
-from .base_model import BaseModel
 
 
 class NERModel(BaseModel):
@@ -587,16 +586,24 @@ class NERModel(BaseModel):
 
     def tmp(self, test, outfile="result.txt"):
         fout = open(outfile, "w+")
-        for words, labels in minibatches(test, self.config.batch_size):
-            labels_pred, _ = self.predict_batch(words)
+        for words, labels in tqdm(minibatches(test, self.config.batch_size)):
+            labels_pred, prob_pred, _ = self.predict_batch(words, withprob=True)
+            index_i = 0
             for sent in list(labels_pred):
+                cur_prob_sent = list(prob_pred)[index_i]
+                # index_j = 0
                 for wordidx in list(sent):
+                    # cur_prob_word = list(cur_prob_sent)[index_j]
                     tag = self.idx_to_tag[wordidx]
                     # tbd add for bieo
                     if tag[0] == 'E':
                         tag = "O"
                     fout.write(tag + "\n")
+                fout.write("Prob is :" + str(cur_prob_sent) +
+                           "\n")
+                # index_j += 1
                 fout.write("\n")
+                index_i += 1
 
         # merge file
         #  paste -d ' ' dev.eval result.txt > merge.txt

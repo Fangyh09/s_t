@@ -1,7 +1,8 @@
+import os
+
+from config import Config
 from model.data_utils import CoNLLDataset
 from model.ner_model import NERModel
-from config import Config
-import os
 
 
 def align_data(data):
@@ -122,9 +123,8 @@ def main():
     model = NERModel(config)
     model.build()
 
-    model.restore_session("/home/yinghong/project/tmp/s_t/results/finalrun"
-                          "/main_layer2/2018-06-20-18-02/model.weights/final"
-                          "-model")
+    model.restore_session(
+        "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/01-HasCNN/try3")
 
     # create dataset
     # test  = CoNLLDataset(config.filename_test, config.processing_word,
@@ -155,9 +155,11 @@ def extract_data(fname):
 
 def pretrain():
     config = Config()
-    pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/02-NoCNN/finaltrain100" \
-                    "iter_0_clip=5,lr_decay=0.9_2018-06-20_19-18-584gvnojdo"
-
+    pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06" \
+                    "-19/01-HasCNN/try5"
+    # pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/best-HasCNN/try4"
+    # reverse = True
+    # cv = False
 
     config_path = os.path.join(pretrain_path, "params.json")
     with open(config_path) as fin:
@@ -174,13 +176,13 @@ def pretrain():
                                     "bieo-nocnn/model.weights/"))
 
     # create dataset
-    # test  = CoNLLDataset(config.filename_test, config.processing_word,
-    #                      config.processing_tag, config.max_iter)
+    test = CoNLLDataset(config.filename_test, config.processing_word,
+                        config.processing_tag, config.max_iter, test=True)
     dev = CoNLLDataset(config.filename_dev, config.processing_word,
                        config.processing_tag, config.max_iter)
 
     # evaluate and interact
-    model.tmp(dev, outfile="result-dev-google.txt")
+    model.tmp(dev, outfile="result-test-google85.63.txt")
 
 if __name__ == "__main__":
     pretrain()

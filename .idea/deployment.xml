@@ -1,25 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="yinghong@mvig:20100" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" autoUpload="Always" serverName="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python" exclude=".svn;.cvs;.idea;.DS_Store;.hg;*.hprof;*.pyc;*.git;" autoUploadExternalChanges="true">
     <serverData>
-      <paths name="sftp://yinghong@yuliang:22000/home/yinghong/.pyenv/versions/3.6.2/envs/env3.6.2/bin/python3">
+      <paths name="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/pycharm_project_925" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="sjtu01">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="yinghong@mvig:20100">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/yinghong/project/tmp/s_t" local="$PROJECT_DIR$" />
+            <mapping deploy="/" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

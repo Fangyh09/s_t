@@ -1,6 +1,4 @@
 import numpy as np
-import os
-
 
 # shared global variables to be imported from model also
 UNK = "$UNK$"
@@ -275,6 +273,7 @@ def get_processing_word(vocab_words=None, vocab_chars=None,
                 if allow_unk:
                     word = vocab_words[UNK]
                 else:
+                    print("!!!!!!!!!!!", word)
                     raise Exception("Unknow key is not allowed. Check that "\
                                     "your vocab (tags?) is correct")
 
