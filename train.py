@@ -1,13 +1,13 @@
-from allennlp.commands.elmo import ElmoEmbedder
-
 import ray
 import ray.tune as tune
-
-# 4. get elmo
+from allennlp.commands.elmo import ElmoEmbedder
 
 from config import Config
 from model.data_utils import CoNLLDataset
 from model.ner_model import NERModel
+
+
+# 4. get elmo
 
 
 # usage
@@ -126,6 +126,7 @@ def main():
         #         "filter_sizes": tune.grid_search([[3, 4], [3, 4, 5]]),
         #     }
         # },
+
         "RealHasCNN-try2": {
             "run": "finaltrain100iter",
             "stop": {"mean_accuracy": 99},
