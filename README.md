@@ -7,10 +7,10 @@
 
 - [ ] 使用Elmo
 - [ ] 增加attention
-- [ ] bie, bieo格式，其他格式
+- [x] bie, bieo格式，其他格式
 - [x] reverse 文件
 - [x] check文件
-- [ ] cross validation
+- [x] cross validation
 - [ ] shuffle
 - [ ] 测试gru
 - [ ] 跑github代码
