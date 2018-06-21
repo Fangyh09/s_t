@@ -31,6 +31,7 @@ with open(dataset_file, 'w') as fout:
     for sentence in tokenized_context + tokenized_question:
         fout.write(' '.join(sentence) + '\n')
 
+
 # Location of pretrained LM.  Here we use the test fixtures.
 datadir = os.path.join('tests', 'fixtures', 'model')
 vocab_file = os.path.join(datadir, 'vocab_test.txt')
@@ -39,7 +40,8 @@ vocab_file = os.path.join(datadir, 'vocab_test.txt')
 options_file = os.path.join('data',
                             'elmo_2x4096_512_2048cnn_2xhighway_options.json')
 weight_file = os.path.join('data', \
-                           'elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
+                             'elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
+
 
 # Dump the embeddings to a file. Run this once for your dataset.
 embedding_file = 'elmo_embeddings.hdf5'
@@ -50,3 +52,4 @@ dump_bilm_embeddings(
 # Load the embeddings from the file -- here the 2nd sentence.
 with h5py.File(embedding_file, 'r') as fin:
     second_sentence_embeddings = fin['1'][...]
+

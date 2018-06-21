@@ -20,8 +20,8 @@ from bilm import TokenBatcher, BidirectionalLanguageModel, weight_layers, \
 # ]
 
 raw_context = [
-                  'I like you .',
-              ] * 128
+    'I like you .',
+] * 128
 
 tokenized_context = [sentence.split() for sentence in raw_context]
 tokenized_question = [
@@ -45,7 +45,7 @@ datadir = os.path.join('tests', 'fixtures', 'model')
 options_file = os.path.join('data',
                             'elmo_2x4096_512_2048cnn_2xhighway_options.json')
 weight_file = os.path.join('data', \
-                           'elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
+                             'elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
 
 # Dump the token embeddings to a file. Run this once for your dataset.
 token_embedding_file = 'elmo_token_embeddings.hdf5'
@@ -53,6 +53,8 @@ dump_token_embeddings(
     vocab_file, options_file, weight_file, token_embedding_file
 )
 tf.reset_default_graph()
+
+
 
 ## Now we can do inference.
 # Create a TokenBatcher to map text to token ids.
@@ -97,7 +99,7 @@ with tf.variable_scope('', reuse=True):
     )
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
+config.gpu_options.allow_growth=True
 with tf.Session(config=config) as sess:
     # It is necessary to initialize variables once before running inference.
     sess.run(tf.global_variables_initializer())
@@ -113,3 +115,4 @@ with tf.Session(config=config) as sess:
                    question_token_ids: question_ids}
     )
     print("done")
+

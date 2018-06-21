@@ -19,7 +19,7 @@ vocab_file = os.path.join(datadir, 'vocab_test.txt')
 options_file = os.path.join('data',
                             'elmo_2x4096_512_2048cnn_2xhighway_options.json')
 weight_file = os.path.join('data', \
-                           'elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
+                             'elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
 
 # Create a Batcher to map text to character ids.
 batcher = Batcher(vocab_file, 50)
@@ -57,6 +57,7 @@ with tf.variable_scope('', reuse=True):
         'output', question_embeddings_op, l2_coef=0.0
     )
 
+
 # Now we can compute embeddings.
 # raw_context = [
 #     'Pretrained biLMs compute representations useful for NLP tasks .',
@@ -72,7 +73,7 @@ tokenized_question = [
 ]
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
+config.gpu_options.allow_growth=True
 with tf.Session(config=config) as sess:
     # It is necessary to initialize variables once before running inference.
     sess.run(tf.global_variables_initializer())
@@ -88,3 +89,4 @@ with tf.Session(config=config) as sess:
                    question_character_ids: question_ids}
     )
     print("done")
+
