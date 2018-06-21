@@ -45,12 +45,14 @@ class NERModel(BaseModel):
         self.lr = tf.placeholder(dtype=tf.float32, shape=[],
                         name="lr")
 
+
         # self.max_length_word = tf.placeholder(dtype=tf.int32, shape=[],
         #                 name="max_length_word")
         # print(type(self.max_length_word))
 
 
-    def get_feed_dict(self, words, labels=None, lr=None, dropout=None):
+    def get_feed_dict(self, words, orig_words, labels=None, lr=None,
+                      dropout=None):
         """Given some data, pad it and build a feed dictionary
 
         Args:
@@ -64,6 +66,7 @@ class NERModel(BaseModel):
             dict {placeholder: value}
 
         """
+
         # perform padding of the given data
         if self.config.use_chars:
             char_ids, word_ids = zip(*words)
@@ -92,10 +95,17 @@ class NERModel(BaseModel):
             word_ids, sequence_lengths = pad_sequences(words, 0)
 
         # build feed dictionary
+        # alog.info("ok!!!!!!")
         feed = {
             self.word_ids: word_ids,
-            self.sequence_lengths: sequence_lengths
+            self.sequence_lengths: sequence_lengths,
+            # self.words: orig_words
         }
+        # alog.info(orig_words)
+        # alog.info(type(orig_words))
+        # alog.info(word_ids)
+        # alog.info(type(word_ids))
+        # alog.info("ok again!!!!!!")
 
         if self.config.use_chars:
             feed[self.char_ids] = char_ids
@@ -250,6 +260,7 @@ class NERModel(BaseModel):
                     output = tf.reshape(output,
                                         shape=[s[0], s[1], 2 * self.config.hidden_size_char])
                     word_embeddings = tf.concat([word_embeddings, output], axis=-1)
+
 
         self.word_embeddings = tf.nn.dropout(word_embeddings, self.dropout)
 
@@ -493,8 +504,10 @@ class NERModel(BaseModel):
         prog = Progbar(target=nbatches)
 
         # iterate over dataset
-        for i, (words, labels) in enumerate(minibatches(train, batch_size)):
-            fd, _ = self.get_feed_dict(words, labels, self.config.lr,
+        for i, (words, labels, orig_words) in enumerate(minibatches(train,
+                                                             batch_size)):
+            fd, _ = self.get_feed_dict(words, orig_words, labels,
+                                       self.config.lr,
                     self.config.dropout)
 
             _, train_loss, summary = self.sess.run(
@@ -536,7 +549,8 @@ class NERModel(BaseModel):
         """
         accs = []
         correct_preds, total_correct, total_preds = 0., 0., 0.
-        for words, labels in minibatches(test, self.config.batch_size):
+        for words, labels, orig_words in minibatches(test,
+                                                   self.config.batch_size):
             labels_pred, sequence_lengths = self.predict_batch(words)
 
             for lab, lab_pred, length in zip(labels, labels_pred,
@@ -586,7 +600,8 @@ class NERModel(BaseModel):
 
     def tmp(self, test, outfile="result.txt"):
         fout = open(outfile, "w+")
-        for words, labels in tqdm(minibatches(test, self.config.batch_size)):
+        for words, labels, orig_words in tqdm(minibatches(test, \
+                self.config.batch_size)):
             labels_pred, prob_pred, _ = self.predict_batch(words, withprob=True)
             index_i = 0
             for sent in list(labels_pred):

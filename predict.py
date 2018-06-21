@@ -155,8 +155,10 @@ def extract_data(fname):
 
 def pretrain():
     config = Config()
+    # reverse,
     pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06" \
                     "-19/01-HasCNN/try5"
+    # reverse,
     # pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/best-HasCNN/try4"
     # reverse = True
     # cv = False

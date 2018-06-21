@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 # shared global variables to be imported from model also
@@ -38,7 +40,8 @@ class CoNLLDataset(object):
         ```
 
     """
-    def __init__(self, filename, processing_word=None, processing_tag=None,
+    def __init__(self, filename, elmo, processing_word=None,
+                 processing_tag=None,
                  max_iter=None, test=False):
         """
         Args:
@@ -54,12 +57,15 @@ class CoNLLDataset(object):
         self.max_iter = max_iter
         self.length = None
         self.test = test
+        self.elmo = elmo
 
 
     def __iter__(self):
         niter = 0
         with open(self.filename) as f:
             words, tags = [], []
+            orig_words = []
+            elmo_embedding = []
             for line in f:
                 line = line.strip()
                 if (len(line) == 0 or line.startswith("-DOCSTART-")):
@@ -67,11 +73,19 @@ class CoNLLDataset(object):
                         niter += 1
                         if self.max_iter is not None and niter > self.max_iter:
                             break
-                        yield words, tags
+                        # todo remote it
+                        use_elmo = True
+                        if use_elmo:
+                            elmo_embedding = self.elmo.embed_sentence(
+                                orig_words)
+
+                        yield words, tags, elmo_embedding
                         words, tags = [], []
+                        orig_words = []
                 else:
                     ls = line.split(' ')
                     word, tag = ls[0],ls[-1]
+                    orig_word = copy.deepcopy(word)
                     if self.processing_word is not None:
                         word = self.processing_word(word)
                     if not self.test:
@@ -79,6 +93,8 @@ class CoNLLDataset(object):
                             tag = self.processing_tag(tag)
                     words += [word]
                     tags += [tag]
+                    orig_words += [orig_word]
+
 
 
     def __len__(self):
@@ -351,19 +367,27 @@ def minibatches(data, minibatch_size):
         list of tuples
 
     """
+    import algo
+    algo.info("!!! I am here")
     x_batch, y_batch = [], []
-    for (x, y) in data:
+    z_batch = []
+    for (x, y, z) in data:
         if len(x_batch) == minibatch_size:
-            yield x_batch, y_batch
+            yield x_batch, y_batch, z_batch
             x_batch, y_batch = [], []
+            z_batch = []
 
         if type(x[0]) == tuple:
             x = zip(*x)
+
         x_batch += [x]
         y_batch += [y]
+        z_batch += [z]
+    z_batch = np.array(z_batch)
+    algo.info("!!! I am out")
 
     if len(x_batch) != 0:
-        yield x_batch, y_batch
+        yield x_batch, y_batch, z_batch
 
 
 def get_chunk_type(tok, idx_to_tag):

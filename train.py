@@ -1,5 +1,9 @@
+from allennlp.commands.elmo import ElmoEmbedder
+
 import ray
 import ray.tune as tune
+
+# 4. get elmo
 
 from config import Config
 from model.data_utils import CoNLLDataset
@@ -137,5 +141,33 @@ def main():
     })
 
 
+def main2():
+    # create instance of config
+
+    options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
+    weight_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
+
+    print("loadding elmo")
+    elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
+    print("finish loading")
+
+    config = Config()
+
+    # build model
+    model = NERModel(config)
+    model.build()
+# model.restore_session("results/crf/model.weights/") # optional, restore weights
+#model.reinitialize_weights("proj")
+
+    # create datasets
+    dev   = CoNLLDataset(config.filename_dev, elmo, config.processing_word,
+                         config.processing_tag, config.max_iter)
+    train = CoNLLDataset(config.filename_train, elmo, config.processing_word,
+                         config.processing_tag, config.max_iter)
+
+    # train model
+    model.train(train, dev)
+
+
 if __name__ == "__main__":
-    main()
+    main2()

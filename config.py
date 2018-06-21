@@ -4,6 +4,8 @@ from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
     get_processing_word
 from model.general_utils import get_logger
 
+# import tensorflow as tf
+
 DEBUG_MODE = False
 
 class Config():
@@ -54,6 +56,8 @@ class Config():
         self.embeddings = (get_trimmed_glove_vectors(self.filename_trimmed)
                 if self.use_pretrained else None)
 
+
+
     # general config
     file_name = os.path.basename(__file__)
     dir_output = "results/tmptmptest/" + "bz=10-training-bieo-nocnn" + "/"
@@ -71,6 +75,7 @@ class Config():
     use_pretrained = True
 
     reverse = True
+    # force to False
     cv = False
 
 
@@ -137,6 +142,7 @@ class Config():
     use_crf = True  # if crf, training is 1.7x slower on CPU
     use_chars = True  # if char embedding, training is 3.5x slower on CPU
     use_cnn = False
+    use_elmo = False
     filter_sizes = [3, 4, 5]
 
     use_reg = False
