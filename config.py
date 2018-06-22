@@ -8,6 +8,7 @@ import numpy as np
 # import tensorflow as tf
 
 DEBUG_MODE = False
+REVERSE = False
 
 class Config():
     def __init__(self, load=True):
@@ -65,7 +66,9 @@ class Config():
 
     # general config
     file_name = os.path.basename(__file__)
-    dir_output = "rayresults/elmo/tmptmptest/" + "bz=10-training-bieo-nocnn" \
+    # attention! it is static
+    dir_output = "rayresults/elmo-offline/tmptmptest/" + \
+                 "bz=10-training-bieo-nocnn" \
                  + "/"
     dir_model  = dir_output + "model.weights/elmo-model"
     path_log   = dir_output + "log.txt"
@@ -80,16 +83,16 @@ class Config():
     filename_trimmed = "/home/yinghong/project/tmp/s_t/data/glove.6B.{}d.trimmed.npz".format(dim_word)
     use_pretrained = True
 
-    reverse = False
     # force to False
     cv = False
 
 
     # dataset
     if DEBUG_MODE:
-        filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.small.bieo"
+        filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.176.bieo"
         filename_test = "/home/yinghong/project/tmp/s_t/data/test.eval.small"
-        filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.small.bieo"
+        filename_train = "/home/yinghong/project/tmp/s_t/data/train.eval.170" \
+                         ".bieo"
     else:
         filename_dev = "/home/yinghong/project/tmp/s_t/data/dev.eval.bieo"
         filename_test = "/home/yinghong/project/tmp/s_t/data/test.eval"
@@ -100,7 +103,7 @@ class Config():
         filename_test += ".cv"
         filename_train += ".cv"
 
-    if reverse:
+    if REVERSE:
         filename_dev += ".reverse"
         filename_test += ".reverse"
         filename_train += ".reverse"
@@ -110,7 +113,7 @@ class Config():
     max_iter = None # if not None, max number of examples in Dataset
 
     # vocab (created from dataset with build_data.py)
-    if reverse:
+    if REVERSE:
         filename_words = "/home/yinghong/project/tmp/s_t/data/words.bieo" \
                          ".reverse.txt"
         filename_tags = "/home/yinghong/project/tmp/s_t/data/tags.bieo" \
@@ -146,9 +149,12 @@ class Config():
 
     # NOTE: if both chars and crf, only 1.6x slower on GPU
     use_crf = True  # if crf, training is 1.7x slower on CPU
-    use_chars = False  # if char embedding, training is 3.5x slower on CPU
+    # deprecated, not to use
+    use_chars = True  # if char embedding, training is 3.5x slower on CPU
+    force_use_chars = True
+
     use_cnn = False
-    use_elmo = False
+    # use_elmo = False
     filter_sizes = [3, 4, 5]
 
     use_reg = False
@@ -160,6 +166,11 @@ class Config():
     lstm_layers = 1
     input_keep_prob = 1.0
     output_keep_prob = 1.0
+
+    # to use only one at same time
+    elmo_drop = False
+    elmo_drop_drop = False
+
 
     decay_mode = "normal" #normal, none, greedy, greedy-half, 4normal
     self_attention = False

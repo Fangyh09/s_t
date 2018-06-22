@@ -1,4 +1,4 @@
-# Sequeece Tagging Elmo-offline
+# Sequeece Tagging Elmo
 
 目标: 88
 
@@ -6,7 +6,7 @@
 ## Features
 
 - [x] 使用Elmo
-- [ ] 添加Elmo offline
+- [x] 添加Elmo offline
 - [ ] 增加attention
 - [x] bie, bieo格式，其他格式
 - [x] reverse 文件

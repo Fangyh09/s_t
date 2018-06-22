@@ -1,6 +1,10 @@
 # import pudb; pu.db
-from allennlp.commands.elmo import ElmoEmbedder
-
+# from allennlp.commands.elmo import ElmoEmbedder
+from config import Config
+from model.data_utils import CoNLLDataset
+from model.ner_model import NERModel
+import ray
+import ray.tune as tune
 
 # 4. get elmo
 
@@ -18,25 +22,46 @@ from allennlp.commands.elmo import ElmoEmbedder
 # "decay_mode": "normal",
 # "lr": tune.grid_search([0.001, 0.005]),
 
+def get_pre_embedding(mode):
+    import h5py
+    if mode == "dev":
+        f = h5py.File('data/elmo_dev.embedding.h5','r')
+        return f
+        # dev_emb = {}
+        # for key in f.keys():
+        #     dev_emb[key] = f[key][:]
+        # return dev_emb
+    elif mode == "train":
+        f = h5py.File('data/elmo_train.embedding.h5', 'r')
+        return f
+        # train_emb = {}
+        # for key in f.keys():
+        #     train_emb[key] = f[key][:]
+        # return train_emb
+    else:
+        raise ValueError("Not fond mode", mode)
+
 
 def main():
-
-    options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
-    weight_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
-
-    print("loadding elmo")
-    elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
-    print("finish loading")
-
-    print("ok??????????????????????")
-    elmo_embedding = elmo.embed_sentence(["I", "Love", "You"])
-    print("ok!!!!!!!!!!!!!!!!!!!!")
-
+    #
+    # options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
+    # weight_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
+    #
+    # print("loadding elmo")
+    # elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
+    # print("finish loading")
+    #
+    # print("ok??????????????????????")
+    # elmo_embedding = elmo.embed_sentence(["I", "Love", "You"])
+    # print("ok!!!!!!!!!!!!!!!!!!!!")
     from config import Config
     from model.data_utils import CoNLLDataset
     from model.ner_model import NERModel
     import ray
     import ray.tune as tune
+
+    train_embeddings = get_pre_embedding('train')
+    dev_embeddings = get_pre_embedding('dev')
 
     def train_func(_config, reporter):
         # tf.reset_default_graph()
@@ -57,15 +82,35 @@ def main():
                              config.processing_word,
                              config.processing_tag,
                              config.max_iter)
-        model.train(train, dev, elmo, reporter)
+        # MODE = {
+        #     'dev': dev,
+        #     'train': train
+        # }
+        #
+        # mode = 'train'
+
+        model.train(train, dev, train_embeddings, dev_embeddings)
 
     # ray.init(redis_address="192.168.1.201:20198")
     import os
     ray.init(num_cpus=1, num_gpus=1)
 
-    tune.register_trainable("elmo_train", train_func)
+    tune.register_trainable("elmo_offline_train", train_func)
 
     tune.run_experiments({
+        "ElmoOffline-NoCNN": {
+            "run": "elmo_offline_train",
+            "stop": {"mean_accuracy": 99},
+            "local_dir": "./rayresults/elmo_offline_train",
+            "trial_resources": {'cpu': 0, 'gpu': 1},
+            "config": {
+                "lstm_layers": 2,
+                "reverse": False,
+                "lr_decay": tune.grid_search([0.9, 0.95]),
+                "clip": tune.grid_search([0, 5]),
+                # "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
+            }
+        },
         # "02-NoCNN": {
         #     "run": "finaltrain100iter",
         #     "stop": {"mean_accuracy": 99},
@@ -153,66 +198,191 @@ def main():
         #     }
         # },
 
-        "01-HasCNN": {
-            "run": "elmo_train",
-            "stop": {"mean_accuracy": 99},
-            "local_dir": "./ray_results/elmo_train",
-            "trial_resources": {'cpu': 0, 'gpu': 1},
-            "config": {
-                "lstm_layers": 2,
-                # "clip": tune.grid_search([0, 5]),
-                # "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
-            }
-        },
+        # "01-HasCNN": {
+        #     "run": "elmo_train",
+        #     "stop": {"mean_accuracy": 99},
+        #     "local_dir": "./ray_results/elmo_train",
+        #     "trial_resources": {'cpu': 0, 'gpu': 1},
+        #     "config": {
+        #         "lstm_layers": 2,
+        #         # "clip": tune.grid_search([0, 5]),
+        #         # "filter_sizes": tune.grid_search([[3,4], [3,4,5]]),
+        #     }
+        # },
     })
 
 
-def main2():
-    # create instance of config
 
-    options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
-    weight_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
+configs = {
+    "config1": {
+    "nepochs": 100,
+    "lstm_layers": 2,
+    "reverse": False,
+    "lr_decay": 0.9,
+    "clip": 0,
+    "dir_output": "rayresults/elmo-offline-config1/"
+    },
+    # todo
+    "config2": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config2/"
+    },
+    # todo
+    "config3": {
+        "nepochs": 100,
+        "lstm_layers": 3,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config3/"
+    },
+    "config4": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        # todo hard set
+        "reverse": True,
+        "lr_decay": 0.9,
+        "clip": 0,
+        "dir_output": "rayresults/elmo-offline-config4/"
+    },
+    # todo
+    "config5": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": True,
+        "lr_decay": 0.95,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config5/"
+    },
+    # todo
+    "config6": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 5,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config6/"
+    },
+    "config7": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.92,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config7/"
+    },
+    "config8": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 0,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config8/"
+    },
+    "config9": {
+        # fail
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config9/"
+    },
+    "config10": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 0,
+        "elmo_drop_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config10/"
+    },
+    "config11": {
+        # set cell dropout
+        "cell_dropout": 0.5,
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config11/"
+    },
+    "config12": {
+        # set cell dropout
+        "cell_dropout": 0.5,
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config12/"
+    },
+    "config13": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 5,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config13/"
+    },
 
-    print("loadding elmo")
-    elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
-    print("finish loading")
+}
 
-    print("ok??????????????????????")
-    elmo_embedding = elmo.embed_sentence(["I", "Love", "You"])
-    print("ok!!!!!!!!!!!!!!!!!!!!")
 
-    from config import Config
-    from model.data_utils import CoNLLDataset
-    from model.ner_model import NERModel
-    import ray
-    import ray.tune as tune
-
+def build_conf(in_conf):
     config = Config()
-    setattr(config, "dir_output",
-            "rayresults/elmo/l=2_clip=5_rev=False_use_chars=False/")
-    # conf1 = {"lstm_layers": 2, "clip": 5}
-    setattr(config, "nepochs", 100)
-    setattr(config, "lstm_layers", 2)
-    setattr(config, "clip", 5)
-    # setattr(config, "use_chars", False)
-    # build model
+    for key, val in in_conf.items():
+        print(key, val)
+        # config[key] = val
+        setattr(config, key, val)
+    setattr(config, "dir_model",
+            getattr(config, "dir_output")+ \
+                                 "model.weights/elmo-model")
+    setattr(config, "path_log", getattr(config, "dir_output") + "log.txt")
+    return config
+
+
+def justmain():
+    # todo
+    config = build_conf(configs["config13"])
     model = NERModel(config)
     model.build()
-# model.restore_session("results/crf/model.weights/") # optional, restore weights
-#model.reinitialize_weights("proj")
-
-
-    # create datasets
-
-    # elmo = 1
-    dev   = CoNLLDataset(config.filename_dev, config.processing_word,
-                         config.processing_tag, config.max_iter)
-    train = CoNLLDataset(config.filename_train, config.processing_word,
-                         config.processing_tag, config.max_iter)
-
-    # train model
-    model.train(train, dev, elmo)
+    dev = CoNLLDataset(config.filename_dev,
+                       config.processing_word,
+                       config.processing_tag,
+                       config.max_iter)
+    train = CoNLLDataset(config.filename_train,
+                         config.processing_word,
+                         config.processing_tag,
+                         config.max_iter)
+    # MODE = {
+    #     'dev': dev,
+    #     'train': train
+    # }
+    #
+    # mode = 'train'
+    train_embeddings = get_pre_embedding('train')
+    dev_embeddings = get_pre_embedding('dev')
+    model.train(train, dev, train_embeddings, dev_embeddings)
 
 
 if __name__ == "__main__":
-    main2()
+    justmain()

@@ -2,9 +2,17 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python" name="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python">
-        <fileTransfer host="mvig" port="20100" rootFolder="/home/yinghong/project/tmp/s_t_rollback" accessType="SFTP" authAgent="true">
-          <option name="port" value="20100" />
+      <webServer id="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python" name="sjtu02">
+        <fileTransfer host="mvig" port="20200" rootFolder="/SSD1/yinghong/tmp/s_t_elmo" accessType="SFTP" authAgent="true">
+          <option name="port" value="20200" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="1e09e39b-32ed-4074-a5d1-12ee4f56dce4" name="sjtu02 (1)" url="http://mvig">
+        <fileTransfer host="mvig" port="20200" rootFolder="/home/yinghong/tmp/s_t_elmo" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="20200" />
         </fileTransfer>
       </webServer>
     </option>

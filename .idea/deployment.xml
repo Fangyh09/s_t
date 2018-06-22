@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python" exclude=".svn;.cvs;.idea;.DS_Store;.hg;*.hprof;*.pyc;*.git;" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" autoUpload="Always" serverName="sjtu02" exclude=".svn;.cvs;.idea;.DS_Store;.hg;*.hprof;*.pyc;" autoUploadExternalChanges="true">
     <serverData>
-      <paths name="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python">
+      <paths name="sjtu02">
         <serverdata>
           <mappings>
             <mapping deploy="/" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath path="/results" />
+            <excludedPath path="/rayresults" />
+            <excludedPath path="/elmo_dev.embedding.npz" />
+            <excludedPath path="/elmo_test.embedding.npz" />
+            <excludedPath path="/elmo_train.embedding.npz" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="sjtu02 (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

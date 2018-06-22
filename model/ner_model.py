@@ -104,6 +104,8 @@ class NERModel(BaseModel):
             self.elmo_embedding: elmo_embedding
             # self.words: orig_words
         }
+        # print("!!!!!!!!!!!!feed it")
+
         # alog.info(orig_words)
         # alog.info(type(orig_words))
         # alog.info(word_ids)
@@ -185,7 +187,8 @@ class NERModel(BaseModel):
                     char_embeddings_expanded = tf.expand_dims(char_embeddings, -1)
                     pooled_outputs = []
                     filter_sizes = self.config.filter_sizes #[3, 4, 5]
-                    num_filters = self.config.hidden_size_char
+                    # num_filters = self.config.hidden_size_char
+                    num_filters = 256
                     dropout_keep_prob = 0.5
                     for i, filter_size in enumerate(filter_sizes):
                         with tf.name_scope("conv-maxpool-%s" % filter_size):
@@ -225,7 +228,8 @@ class NERModel(BaseModel):
                     # print(word_embeddings)
 
                     # todo uncomment it
-                    word_embeddings = tf.concat([word_embeddings, h_pool], axis=-1)
+                    if self.config.force_use_chars:
+                        word_embeddings = tf.concat([word_embeddings, h_pool], axis=-1)
                 else:
                     # get char embeddings matrix
                     # _char_embeddings = tf.get_variable(
@@ -247,10 +251,12 @@ class NERModel(BaseModel):
                                                       state_is_tuple=True, initializer=tf.orthogonal_initializer())
                     cell_bw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char,
                                                       state_is_tuple=True, initializer=tf.orthogonal_initializer())
-                    cell_fw = tf.contrib.rnn.DropoutWrapper(cell_fw, input_keep_prob=self.config.input_keep_prob,
-                                                            output_keep_prob=self.config.output_keep_prob)
-                    cell_bw = tf.contrib.rnn.DropoutWrapper(cell_bw, input_keep_prob=self.config.input_keep_prob,
-                                                            output_keep_prob=self.config.output_keep_prob)
+                    cell_fw = tf.contrib.rnn.DropoutWrapper(cell_fw,
+                                                            input_keep_prob=1,
+                                                            output_keep_prob=1)
+                    cell_bw = tf.contrib.rnn.DropoutWrapper(cell_bw,
+                                                            input_keep_prob=1,
+                                                            output_keep_prob=1)
                     _output = tf.nn.bidirectional_dynamic_rnn(
                         cell_fw, cell_bw, char_embeddings,
                         sequence_length=word_lengths, dtype=tf.float32)
@@ -262,10 +268,44 @@ class NERModel(BaseModel):
                     # shape = (batch size, max sentence length, char hidden size)
                     output = tf.reshape(output,
                                         shape=[s[0], s[1], 2 * self.config.hidden_size_char])
-                    word_embeddings = tf.concat([word_embeddings, output], axis=-1)
+                    if self.config.force_use_chars:
+                        word_embeddings = tf.concat([word_embeddings, output], axis=-1)
+
+
+
+        # self.elmo_embedding = tf.reshape(self.elmo_embedding, shape=[
+        #     tf.shape(word_embeddings)[0], tf.shape(word_embeddings)[1],
+        #     1024 * 3])
+
         self.elmo_embedding = tf.reshape(self.elmo_embedding, shape=[
-            tf.shape(word_embeddings)[0], tf.shape(word_embeddings)[1],
-            1024 * 3])
+            tf.shape(word_embeddings)[0], tf.shape(word_embeddings)[1], 3 *1024])
+
+        #weighted elmo_embedding
+        with tf.variable_scope("elmo_proj"):
+            W = tf.get_variable("W", dtype=tf.float32,
+                                shape=[2 * self.config.hidden_size_lstm,
+                                       self.config.ntags])
+
+            b = tf.get_variable("b", shape=[self.config.ntags],
+                                dtype=tf.float32,
+                                initializer=tf.zeros_initializer())
+
+            nsteps = tf.shape(output)[1]
+            output = tf.reshape(output, [-1, 2 * self.config.hidden_size_lstm])
+            pred = tf.matmul(output, W) + b
+
+            self.logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
+
+
+
+        if self.config.elmo_drop:
+            self.elmo_embedding = tf.nn.dropout(self.elmo_embedding,
+                                                self.dropout)
+        elif self.config.elmo_drop_drop:
+            self.elmo_embedding = tf.nn.dropout(self.elmo_embedding,
+                                                self.dropout)
+            self.elmo_embedding = tf.nn.dropout(self.elmo_embedding,
+                                                self.dropout)
 
         word_embeddings = tf.concat([word_embeddings, self.elmo_embedding], axis=-1)
         self.word_embeddings = tf.nn.dropout(word_embeddings, self.dropout)
@@ -314,21 +354,26 @@ class NERModel(BaseModel):
 
             if self.config.use_gru:
                 for i in range(self.config.lstm_layers):
-                    cell_fw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.GRUCell(self.config.hidden_size_gru), input_keep_prob=self.config.input_keep_prob,
-                                                            output_keep_prob=self.config.output_keep_prob)
+                    cell_fw = tf.contrib.rnn.DropoutWrapper(
+                        tf.contrib.rnn.GRUCell(self.config.hidden_size_gru),
+                        input_keep_prob=1,
+                                                            output_keep_prob=1)
 
                     stacked_rnn.append(cell_fw)
-                    cell_bw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.GRUCell(self.config.hidden_size_gru), input_keep_prob=self.config.input_keep_prob,
-                                                            output_keep_prob=self.config.output_keep_prob)
+                    cell_bw = tf.contrib.rnn.DropoutWrapper(
+                        tf.contrib.rnn.GRUCell(self.config.hidden_size_gru), input_keep_prob=1,
+                                                            output_keep_prob=1)
                     stacked_bw_rnn.append(cell_bw)
                 # cell_fw = tf.contrib.rnn.GRUCell(self.config.hidden_size_gru)
                 # cell_bw = tf.contrib.rnn.GRUCell(self.config.hidden_size_gru)
             else:
                 for i in range(self.config.lstm_layers):
-                    cell_fw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=self.config.input_keep_prob,
-                                                            output_keep_prob=self.config.output_keep_prob)
-                    cell_bw = tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=self.config.input_keep_prob,
-                                                            output_keep_prob=self.config.output_keep_prob)
+                    cell_fw = tf.contrib.rnn.DropoutWrapper(
+                        tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=1,
+                                                            output_keep_prob=1)
+                    cell_bw = tf.contrib.rnn.DropoutWrapper(
+                        tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=1,
+                                                            output_keep_prob=1)
                     stacked_rnn.append(cell_fw)
                     stacked_bw_rnn.append(cell_bw)
 
@@ -493,7 +538,7 @@ class NERModel(BaseModel):
             return labels_pred, sequence_lengths
 
 
-    def run_epoch(self, train, dev, epoch, elmo):
+    def run_epoch(self, train, dev, epoch, train_embeddings, dev_embeddings):
         """Performs one complete pass over the train set and evaluate on dev
 
         Args:
@@ -510,12 +555,15 @@ class NERModel(BaseModel):
         # hack it
         # nbatches = (len(train) + batch_size - 1) // batch_size
         nbatches = (11421 + batch_size - 1) // batch_size
+        # nbatches = (11421 + batch_size - 1) // batch_size
+
         prog = Progbar(target=nbatches)
 
         # iterate over dataset
-        for i, (words, labels, elmo_embedding) in enumerate(minibatches(train,
-                                                             batch_size, elmo)):
+        for i, (words, labels) in enumerate(minibatches(train,
+                                                             batch_size)):
             # print("hahaha, I got it!!!!!!!!!")
+            elmo_embedding = train_embeddings[str(i)][:].tolist()
             fd, _ = self.get_feed_dict(words, elmo_embedding, labels,
                                        self.config.lr,
                     self.config.dropout)
@@ -531,7 +579,7 @@ class NERModel(BaseModel):
             # if i % 100 == 0:
             #     self.file_writer.flush()
 
-        metrics = self.run_evaluate(dev, elmo)
+        metrics = self.run_evaluate(dev, dev_embeddings)
 
         summary = tf.Summary()
         summary.value.add(tag="acc", simple_value=metrics["acc"])
@@ -547,7 +595,7 @@ class NERModel(BaseModel):
         return metrics["f1"]
 
 
-    def run_evaluate(self, test, elmo):
+    def run_evaluate(self, test, dev_embeddings):
         """Evaluates performance on test set
 
         Args:
@@ -559,9 +607,9 @@ class NERModel(BaseModel):
         """
         accs = []
         correct_preds, total_correct, total_preds = 0., 0., 0.
-        for words, labels, elmo_embedding in minibatches(test,
-                                                   self.config.batch_size,
-                                                     elmo):
+        for idx, (words, labels) in enumerate(minibatches(test,
+                                                          self.config.batch_size)):
+            elmo_embedding = dev_embeddings[str(idx)][:]
             labels_pred, sequence_lengths = self.predict_batch(words, elmo_embedding)
 
             for lab, lab_pred, length in zip(labels, labels_pred,
@@ -611,7 +659,7 @@ class NERModel(BaseModel):
 
     def tmp(self, test, elmo, outfile="result.txt"):
         fout = open(outfile, "w+")
-        for words, labels, elmo_embedding in tqdm(minibatches(test, \
+        for words, labels, elmo_embedding in (minibatches(test, \
                 self.config.batch_size, elmo)):
             labels_pred, prob_pred, _ = self.predict_batch(words,
                                                            elmo_embedding,

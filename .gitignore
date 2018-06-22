@@ -105,3 +105,10 @@ venv.bak/
 .vscode/
 venv/
 ray_results~/
+results/
+*.npz
+Elmo/
+ray_result/
+rayresults/
+data/
+data

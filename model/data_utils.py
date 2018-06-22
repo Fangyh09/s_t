@@ -62,8 +62,6 @@ class CoNLLDataset(object):
         niter = 0
         with open(self.filename) as f:
             words, tags = [], []
-            orig_words = []
-            # elmo_embedding = []
             for line in f:
                 line = line.strip()
                 if (len(line) == 0 or line.startswith("-DOCSTART-")):
@@ -71,22 +69,11 @@ class CoNLLDataset(object):
                         niter += 1
                         if self.max_iter is not None and niter > self.max_iter:
                             break
-                        # todo remote it
-                        # use_elmo = True
-                        # if use_elmo:
-                        #\
-                        # embedding = self.elmo.embed_sentence(orig_words)
-                        # embedding = np.transpose(embedding, (1, 0, 2))
-                        # embedding = embedding.reshape(embedding.shape[0], -1)
-                        # print("embedding shape", embedding.shape)
-                        # yield words, tags, embedding
-                        yield words, tags, orig_words
+                        yield words, tags
                         words, tags = [], []
-                        orig_words = []
                 else:
                     ls = line.split(' ')
                     word, tag = ls[0],ls[-1]
-                    orig_word = copy.deepcopy(word)
                     if self.processing_word is not None:
                         word = self.processing_word(word)
                     if not self.test:
@@ -94,8 +81,6 @@ class CoNLLDataset(object):
                             tag = self.processing_tag(tag)
                     words += [word]
                     tags += [tag]
-                    orig_words += [orig_word]
-
 
 
     def __len__(self):
@@ -358,7 +343,7 @@ def pad_sequences(sequences, pad_tok, nlevels=1):
     return sequence_padded, sequence_length
 
 
-def minibatches(data, minibatch_size, elmo):
+def minibatches(data, minibatch_size):
     """
     Args:
         data: generator of (sentence, tags) tuples
@@ -368,45 +353,19 @@ def minibatches(data, minibatch_size, elmo):
         list of tuples
 
     """
-    # import alog
-    # alog.info("!!! I am here")
     x_batch, y_batch = [], []
-    z_batch = []
-    for (x, y, z) in data:
+    for (x, y) in data:
         if len(x_batch) == minibatch_size:
-            activations, mask = elmo.batch_to_embeddings(z_batch)
-            activations = np.transpose(activations, (0, 2, 1, 3))
-            activations = activations.reshape(activations.shape[0],
-                                              activations.shape[1],
-                                              -1)
-            z_batch = activations.cpu().numpy()
-            # print("shape", z_batch.shape)
-            yield x_batch, y_batch, z_batch.tolist()
-
+            yield x_batch, y_batch
             x_batch, y_batch = [], []
-            z_batch = []
 
         if type(x[0]) == tuple:
             x = zip(*x)
-
         x_batch += [x]
         y_batch += [y]
-        z_batch += [z]
-
-
-    # z_batch = np.array(z_batch)
-    # alog.info("!!! I am out")
 
     if len(x_batch) != 0:
-        activations, mask = elmo.batch_to_embeddings(z_batch)
-        activations = np.transpose(activations, (0, 2, 1, 3))
-        activations = activations.reshape(activations.shape[0],
-                                          activations.shape[1],
-                                          -1)
-        z_batch = activations.cpu().numpy()
-        # print("shape", z_batch.shape)
-        yield x_batch, y_batch, z_batch.tolist()
-
+        yield x_batch, y_batch
 
 def get_chunk_type(tok, idx_to_tag):
     """

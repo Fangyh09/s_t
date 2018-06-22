@@ -5,7 +5,7 @@ from model.general_utils import get_logger
 from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
         get_processing_word
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 class Config():
     def __init__(self, load=True):

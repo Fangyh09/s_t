@@ -133,7 +133,7 @@ class BaseModel(object):
         self.file_epoch_writer = tf.summary.FileWriter(self.config.dir_output + "test" + logdir)
 
 
-    def train(self, train, dev, elmo, reporter=False):
+    def train(self, train, dev, train_embeddings, dev_embeddings, reporter=False):
         """Performs training with early stopping and lr exponential decay
 
         Args:
@@ -149,7 +149,7 @@ class BaseModel(object):
             self.logger.info("Epoch {:} out of {:}".format(epoch + 1,
                         self.config.nepochs))
 
-            score = self.run_epoch(train, dev, epoch, elmo)
+            score = self.run_epoch(train, dev, epoch, train_embeddings, dev_embeddings)
 
             if self.config.decay_mode == "normal":
                 self.config.lr *= self.config.lr_decay # decay learning rate
