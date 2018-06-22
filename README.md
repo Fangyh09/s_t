@@ -5,12 +5,13 @@
 
 ## Features
 
-- [ ] 使用Elmo
+- [x] 使用Elmo
 - [ ] 增加attention
 - [x] bie, bieo格式，其他格式
 - [x] reverse 文件
 - [x] check文件
 - [x] cross validation
+- [x] 提交测试
 - [ ] shuffle
 - [ ] 测试gru
 - [ ] 跑github代码

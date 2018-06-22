@@ -263,9 +263,10 @@ class NERModel(BaseModel):
                     output = tf.reshape(output,
                                         shape=[s[0], s[1], 2 * self.config.hidden_size_char])
                     word_embeddings = tf.concat([word_embeddings, output], axis=-1)
-        self.elmo_embedding = tf.reshape(self.elmo_embedding, shape=[s[0],
-                                                                     s[1],
-                                                                     1024 * 3])
+        self.elmo_embedding = tf.reshape(self.elmo_embedding, shape=[
+            tf.shape(word_embeddings)[0], tf.shape(word_embeddings)[1],
+            1024 * 3])
+
         word_embeddings = tf.concat([word_embeddings, self.elmo_embedding], axis=-1)
         self.word_embeddings = tf.nn.dropout(word_embeddings, self.dropout)
 
@@ -608,11 +609,13 @@ class NERModel(BaseModel):
 
         return preds
 
-    def tmp(self, test, outfile="result.txt"):
+    def tmp(self, test, elmo, outfile="result.txt"):
         fout = open(outfile, "w+")
-        for words, labels, orig_words in tqdm(minibatches(test, \
-                self.config.batch_size)):
-            labels_pred, prob_pred, _ = self.predict_batch(words, withprob=True)
+        for words, labels, elmo_embedding in tqdm(minibatches(test, \
+                self.config.batch_size, elmo)):
+            labels_pred, prob_pred, _ = self.predict_batch(words,
+                                                           elmo_embedding,
+                                                           withprob=True)
             index_i = 0
             for sent in list(labels_pred):
                 cur_prob_sent = list(prob_pred)[index_i]

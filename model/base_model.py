@@ -91,7 +91,8 @@ class BaseModel(object):
         #                    "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/01-HasCNN/try85.63/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/"
         #                    "final-model2018-06-20-21-08")
 
-        self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
+        # self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
+        self.saver.restore(self.sess, dir_model)
 
 
     def save_session(self, epoch=""):

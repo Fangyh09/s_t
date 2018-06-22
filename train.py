@@ -188,9 +188,13 @@ def main2():
     import ray.tune as tune
 
     config = Config()
-    # setattr(config, "dir_output", "")
+    setattr(config, "dir_output",
+            "rayresults/elmo/l=2_clip=5_rev=False_use_chars=False/")
+    # conf1 = {"lstm_layers": 2, "clip": 5}
     setattr(config, "nepochs", 100)
     setattr(config, "lstm_layers", 2)
+    setattr(config, "clip", 5)
+    # setattr(config, "use_chars", False)
     # build model
     model = NERModel(config)
     model.build()

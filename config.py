@@ -4,6 +4,7 @@ from model.data_utils import get_trimmed_glove_vectors, load_vocab, \
     get_processing_word
 from model.general_utils import get_logger
 
+import numpy as np
 # import tensorflow as tf
 
 DEBUG_MODE = False
@@ -55,6 +56,10 @@ class Config():
         # 3. get pre-trained embeddings
         self.embeddings = (get_trimmed_glove_vectors(self.filename_trimmed)
                 if self.use_pretrained else None)
+
+        # train_file =
+        # npzfile = np.load(train_file)
+        # self.train_embeddings =
 
 
 
@@ -141,7 +146,7 @@ class Config():
 
     # NOTE: if both chars and crf, only 1.6x slower on GPU
     use_crf = True  # if crf, training is 1.7x slower on CPU
-    use_chars = True  # if char embedding, training is 3.5x slower on CPU
+    use_chars = False  # if char embedding, training is 3.5x slower on CPU
     use_cnn = False
     use_elmo = False
     filter_sizes = [3, 4, 5]

@@ -1,8 +1,4 @@
-import os
 
-from config import Config
-from model.data_utils import CoNLLDataset
-from model.ner_model import NERModel
 
 
 def align_data(data):
@@ -86,6 +82,11 @@ input> I love Paris""")
     interactive_shell(model)
 
 def main():
+    import os
+
+    from config import Config
+    from model.data_utils import CoNLLDataset
+    from model.ner_model import NERModel
     # create instance of config
     config = Config()
     prefix = "/home/yinghong/project/tmp/s_t/ray_results"
@@ -154,6 +155,11 @@ def extract_data(fname):
         fout.write(ls[0] + "\n")
 
 def pretrain():
+    import os
+
+    from config import Config
+    from model.data_utils import CoNLLDataset
+    from model.ner_model import NERModel
     config = Config()
     # reverse,
     pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06" \
@@ -186,8 +192,62 @@ def pretrain():
     # evaluate and interact
     model.tmp(dev, outfile="result-test-google85.63.txt")
 
+def elmo_pretrain():
+    from allennlp.commands.elmo import ElmoEmbedder
+    options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
+    weight_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
+
+    print("loadding elmo")
+    elmo = ElmoEmbedder(options_file, weight_file, cuda_device=0)
+    print("finish loading")
+
+    print("ok??????????????????????")
+    elmo_embedding = elmo.embed_sentence(["I", "Love", "You"])
+    print("ok!!!!!!!!!!!!!!!!!!!!")
+
+    from config import Config
+    from model.data_utils import CoNLLDataset
+    from model.ner_model import NERModel
+    import ray
+    import ray.tune as tune
+
+    config = Config()
+    # reverse,
+    # pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06" \
+    #                 "-19/01-HasCNN/try5"
+    # reverse,
+    # pretrain_path = "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/best-HasCNN/try4"
+    # reverse = True
+    # cv = False
+    pretrain_path = "/SSD1/yinghong/tmp/s_t_elmo/ra" \
+                    "yresults/elmo/tmptmptest/bz=10" \
+                    "-training-bieo-nocnn/model.weights/elmo-model2018-06-22-08-15"
+
+    # config_path = os.path.join(pretrain_path, "params.json")
+    # with open(config_path) as fin:
+    #     content = fin.read().replace('\n', '')
+    #     import json
+    #     j = json.loads(content)
+    #     for (key, val) in j.items():
+    #         setattr(config, key, val)
+    setattr(config, "clip", 5)
+    setattr(config, "lstm_layers", 2)
+    model = NERModel(config)
+    model.build()
+
+    model.restore_session(pretrain_path)
+
+    # create dataset
+    test = CoNLLDataset(config.filename_test, config.processing_word,
+                        config.processing_tag, config.max_iter, test=True)
+    dev = CoNLLDataset(config.filename_dev, config.processing_word,
+                       config.processing_tag, config.max_iter)
+
+    # evaluate and interact
+    model.tmp(test, elmo, outfile="result-test-google85.63.txt")
+
 if __name__ == "__main__":
-    pretrain()
+    elmo_pretrain()
 
     # creat trim
     # dev_name = "dev.eval"
