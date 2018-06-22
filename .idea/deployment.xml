@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="sjtu02" exclude=".svn;.cvs;.idea;.DS_Store;.hg;*.hprof;*.pyc;" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" autoUpload="Always" serverName="sjtu02" uploadOnCheckin="sftp://yinghong@mvig:20100/home/yinghong/miniconda2/envs/tf-gpu/bin/python" exclude=".svn;.cvs;.idea;.DS_Store;.hg;*.hprof;*.pyc;" autoUploadExternalChanges="true">
     <serverData>
       <paths name="sjtu02">
         <serverdata>
@@ -24,6 +24,7 @@
         </serverdata>
       </paths>
     </serverData>
+    <option name="myUploadOnCheckinName" value="sjtu02" />
     <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>

@@ -173,7 +173,7 @@ class NERModel(BaseModel):
                 char_embeddings = tf.nn.embedding_lookup(_char_embeddings,
                                                          self.char_ids, name="char_embeddings")
                 # add dropout
-                char_embeddings = tf.nn.dropout(char_embeddings, self.dropout)
+                # char_embeddings = tf.nn.dropout(char_embeddings, self.dropout)
                 s = tf.shape(char_embeddings)
                 char_embeddings = tf.reshape(char_embeddings,
                                              shape=[s[0] * s[1], s[-2], self.config.dim_char])
@@ -657,10 +657,11 @@ class NERModel(BaseModel):
 
         return preds
 
-    def tmp(self, test, elmo, outfile="result.txt"):
+    def tmp(self, test, elmo_embeddings, outfile="result.txt"):
         fout = open(outfile, "w+")
-        for words, labels, elmo_embedding in (minibatches(test, \
-                self.config.batch_size, elmo)):
+        for idx, (words, labels) in enumerate(minibatches(test, \
+                self.config.batch_size)):
+            elmo_embedding = elmo_embeddings[str(idx)]
             labels_pred, prob_pred, _ = self.predict_batch(words,
                                                            elmo_embedding,
                                                            withprob=True)

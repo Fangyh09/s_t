@@ -1,5 +1,9 @@
-
-
+from model.data_utils import minibatches
+import operator
+from util.get_elmo import  get_pre_embedding
+from model.data_utils import CoNLLDataset
+from model.ner_model import NERModel
+from util.get_elmo import get_pre_embedding, build_conf, configs
 
 def align_data(data):
     """Given dict with lists, creates aligned strings
@@ -246,9 +250,90 @@ def elmo_pretrain():
     # evaluate and interact
     model.tmp(test, elmo, outfile="result-test-google85.63.txt")
 
-if __name__ == "__main__":
-    elmo_pretrain()
 
+def list2str(list):
+    """
+    :param list: [[1,2], [3]]
+    :return:
+    """
+    return '_'.join('_'.join(str(x)) for x in list)
+
+
+
+def ensemble(models, dataset, elmo_embeddings, outfile="result.txt", batch_size
+= 10):
+    fout = open(outfile, "w+")
+    for idx, (words, labels)  in enumerate(minibatches(dataset, \
+                                                      batch_size)):
+        elmo_embedding = elmo_embeddings[str(idx)][:].tolist()
+
+        tags_counter = {}
+        orig_labels = {}
+        scores = {}
+        for model in models:
+            cur_labels_pred, cur_prob_pred, _ = model.predict_batch(words,
+                                                       elmo_embedding,
+                                                       withprob=True)
+            pred_str = list2str(cur_labels_pred)
+            tags_counter[pred_str] = tags_counter.get(pred_str, 0) + 1
+            orig_labels[pred_str] = cur_labels_pred
+            scores[pred_str] += cur_prob_pred
+
+        # labels_pred = orig_labels[max(tags_counter.iteritems(),
+        #                     key=operator.itemgetter(1))[0]]
+
+        labels_pred = orig_labels[max(tags_counter.items(),
+                                      key=lambda x: (x[1], scores[x[0]]))]
+
+        for sent in list(labels_pred):
+            for wordidx in list(sent):
+                tag = models[0].idx_to_tag[wordidx]
+                # tbd add for bieo
+                if tag[0] == 'E':
+                    tag = "O"
+                fout.write(tag + "\n")
+            fout.write("\n")
+        # index_i = 0
+        # for sent in list(labels_pred):
+        #     cur_prob_sent = list(prob_pred)[index_i]
+        #     # index_j = 0
+        #     for wordidx in list(sent):
+        #         # cur_prob_word = list(cur_prob_sent)[index_j]
+        #         tag = models[0].idx_to_tag[wordidx]
+        #         # tbd add for bieo
+        #         if tag[0] == 'E':
+        #             tag = "O"
+        #         fout.write(tag + "\n")
+        #     fout.write("Prob is :" + str(cur_prob_sent) +
+        #                "\n")
+        #     # index_j += 1
+        #     fout.write("\n")
+        #     index_i += 1
+
+
+
+
+if __name__ == "__main__":
+    # elmo_pretrain()
+    from config import Config
+    default_config = Config()
+    dev = CoNLLDataset(default_config.filename_dev,
+                       default_config.processing_word,
+                       default_config.processing_tag,
+                       default_config.max_iter)
+    train = CoNLLDataset(default_config.filename_train,
+                         default_config.processing_word,
+                         default_config.processing_tag,
+                         default_config.max_iter)
+
+    train_embeddings = get_pre_embedding('train')
+    dev_embeddings = get_pre_embedding('dev')
+
+    config = build_conf(configs["config13"])
+    model = NERModel(config)
+    model.build()
+
+    ensemble(models, dev, dev_embeddings, outfile="result-test-google85.63.txt")
     # creat trim
     # dev_name = "dev.eval"
     # extract_data(dev_name)
