@@ -1,9 +1,11 @@
 from model.data_utils import minibatches
+import tensorflow as tf
 import operator
 from util.get_elmo import  get_pre_embedding
 from model.data_utils import CoNLLDataset
 from model.ner_model import NERModel
 from util.get_elmo import get_pre_embedding, build_conf, configs
+import os
 
 def align_data(data):
     """Given dict with lists, creates aligned strings
@@ -196,6 +198,7 @@ def pretrain():
     # evaluate and interact
     model.tmp(dev, outfile="result-test-google85.63.txt")
 
+
 def elmo_pretrain():
     from allennlp.commands.elmo import ElmoEmbedder
     options_file = "Elmo/data/elmo_2x4096_512_2048cnn_2xhighway_options.json"
@@ -249,6 +252,20 @@ def elmo_pretrain():
 
     # evaluate and interact
     model.tmp(test, elmo, outfile="result-test-google85.63.txt")
+
+
+def static_elmo_pretrain(config_name, dataset, embeddings, outfile):
+    config_class = build_conf(configs[config_name])
+
+    model = NERModel(config_class)
+    model.build()
+    prefix = os.path.join("/SSD1/yinghong/tmp/s_t_elmo/",configs[
+        config_name]["dir_output"])
+    pretrain_path = os.path.join(prefix, "model.weights")
+    # model.restore_session(configs[config_name]["pretrain_path"])
+    model.restore_session(pretrain_path)
+    # evaluate and interact
+    model.tmp(dataset, embeddings, outfile=outfile)
 
 
 def list2str(list):
@@ -315,30 +332,58 @@ def ensemble(models, dataset, elmo_embeddings, outfile="result.txt", batch_size
 
 if __name__ == "__main__":
     # elmo_pretrain()
-    from config import Config
-    default_config = Config()
-    dev = CoNLLDataset(default_config.filename_dev,
-                       default_config.processing_word,
-                       default_config.processing_tag,
-                       default_config.max_iter)
-    train = CoNLLDataset(default_config.filename_train,
-                         default_config.processing_word,
-                         default_config.processing_tag,
-                         default_config.max_iter)
-
-    train_embeddings = get_pre_embedding('train')
-    dev_embeddings = get_pre_embedding('dev')
-
-    config = build_conf(configs["config13"])
-    model = NERModel(config)
-    model.build()
-
-    ensemble(models, dev, dev_embeddings, outfile="result-test-google85.63.txt")
+    # from config import Config
+    # default_config = Config()
+    # dev = CoNLLDataset(default_config.filename_dev,
+    #                    default_config.processing_word,
+    #                    default_config.processing_tag,
+    #                    default_config.max_iter)
+    # train = CoNLLDataset(default_config.filename_train,
+    #                      default_config.processing_word,
+    #                      default_config.processing_tag,
+    #                      default_config.max_iter)
+    #
+    # train_embeddings = get_pre_embedding('train')
+    # dev_embeddings = get_pre_embedding('dev')
+    #
+    # config = build_conf(configs["config13"])
+    # model = NERModel(config)
+    # model.build()
+    #
+    # ensemble(models, dev, dev_embeddings, outfile="result-test-google85.63.txt")
     # creat trim
     # dev_name = "dev.eval"
     # extract_data(dev_name)
+    mode = "dev"
 
 
+    from config import Config
+    default_config = Config()
+    test = CoNLLDataset(default_config.filename_test, default_config.processing_word,
+                        default_config.processing_tag, default_config.max_iter, test=True)
+    dev = CoNLLDataset(default_config.filename_dev, default_config.processing_word,
+                       default_config.processing_tag, default_config.max_iter)
+
+    # train_embeddings = get_pre_embedding('train')
+    # embeddings = get_pre_embedding(mode)
+    import h5py
+    embeddings = h5py.File("data/elmo_" + mode + ".embedding.h5", 'r')
+    if mode == "dev":
+        dataset = dev
+        save_path = "presubmit"
+    elif mode == "test":
+        dataset = test
+        save_path = "submit"
+
+    # config_name = "config13"
+    idx_set = [1,2,3,7,8,9,10,11,12,13,14,16,17,18]
+    for idx in idx_set:
+        config_name = "config" + str(idx)
+        config = build_conf(configs[config_name])
+        tf.reset_default_graph()
+        static_elmo_pretrain(config_name, dataset, embeddings,
+                             outfile= os.path.join(save_path,
+                                              config_name+"-" + mode + ".predict"))
 
 
 

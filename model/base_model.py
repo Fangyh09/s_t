@@ -91,23 +91,24 @@ class BaseModel(object):
         #                    "/home/yinghong/project/tmp/s_t_rollback/ray_results/06-19/01-HasCNN/try85.63/results/tmptmptest/bz=10-training-bieo-nocnn/model.weights/"
         #                    "final-model2018-06-20-21-08")
 
-        # self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
-        self.saver.restore(self.sess, dir_model)
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
+        # self.saver.restore(self.sess, dir_model)
 
 
     def save_session(self, epoch=""):
         """Saves session = weights"""
         import datetime
+        # todo no date
         date_str = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
         if not os.path.exists(self.config.dir_model+date_str):
-            os.makedirs(self.config.dir_model+date_str)
+            os.makedirs(self.config.dir_model)
         # if not os.path.exists(self.config.dir_model):
         #     os.makedirs(self.config.dir_model)
         # if epoch != "":
         #     self.saver.save(self.sess, self.config.dir_model,
         #                     global_step=epoch)
         # else:
-        self.saver.save(self.sess, self.config.dir_model+date_str)
+        self.saver.save(self.sess, self.config.dir_model)
         # self.saver.save(self.sess, self.config.dir_model)
 
     def close_session(self):

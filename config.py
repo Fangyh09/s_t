@@ -170,6 +170,7 @@ class Config():
     # to use only one at same time
     elmo_drop = False
     elmo_drop_drop = False
+    elmo_2drop = False
 
 
     decay_mode = "normal" #normal, none, greedy, greedy-half, 4normal

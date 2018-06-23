@@ -2,7 +2,6 @@
 # from allennlp.commands.elmo import ElmoEmbedder
 from config import Config
 from model.data_utils import CoNLLDataset
-from model.ner_model import NERModel
 from util.get_elmo import get_pre_embedding, build_conf, configs
 import ray
 import ray.tune as tune
@@ -217,7 +216,10 @@ def main():
 
 def justmain():
     # todo
-    config = build_conf(configs["config14"])
+    config_name = "config18"
+    config = build_conf(configs[config_name])
+    print(config_name)
+    from model.ner_model import NERModel
     model = NERModel(config)
     model.build()
     dev = CoNLLDataset(config.filename_dev,

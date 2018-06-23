@@ -7,6 +7,7 @@ from .data_utils import minibatches, pad_sequences, get_chunks
 from .general_utils import Progbar
 
 
+
 class NERModel(BaseModel):
     """Specialized class of Model for NER"""
 
@@ -173,7 +174,7 @@ class NERModel(BaseModel):
                 char_embeddings = tf.nn.embedding_lookup(_char_embeddings,
                                                          self.char_ids, name="char_embeddings")
                 # add dropout
-                # char_embeddings = tf.nn.dropout(char_embeddings, self.dropout)
+                char_embeddings = tf.nn.dropout(char_embeddings, self.dropout)
                 s = tf.shape(char_embeddings)
                 char_embeddings = tf.reshape(char_embeddings,
                                              shape=[s[0] * s[1], s[-2], self.config.dim_char])
@@ -281,20 +282,20 @@ class NERModel(BaseModel):
             tf.shape(word_embeddings)[0], tf.shape(word_embeddings)[1], 3 *1024])
 
         #weighted elmo_embedding
-        with tf.variable_scope("elmo_proj"):
-            W = tf.get_variable("W", dtype=tf.float32,
-                                shape=[2 * self.config.hidden_size_lstm,
-                                       self.config.ntags])
-
-            b = tf.get_variable("b", shape=[self.config.ntags],
-                                dtype=tf.float32,
-                                initializer=tf.zeros_initializer())
-
-            nsteps = tf.shape(output)[1]
-            output = tf.reshape(output, [-1, 2 * self.config.hidden_size_lstm])
-            pred = tf.matmul(output, W) + b
-
-            self.logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
+        # with tf.variable_scope("elmo_proj"):
+        #     W = tf.get_variable("W", dtype=tf.float32,
+        #                         shape=[2 * self.config.hidden_size_lstm,
+        #                                self.config.ntags])
+        #
+        #     b = tf.get_variable("b", shape=[self.config.ntags],
+        #                         dtype=tf.float32,
+        #                         initializer=tf.zeros_initializer())
+        #
+        #     nsteps = tf.shape(output)[1]
+        #     output = tf.reshape(output, [-1, 2 * self.config.hidden_size_lstm])
+        #     pred = tf.matmul(output, W) + b
+        #
+        #     self.logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
 
 
 
@@ -306,6 +307,9 @@ class NERModel(BaseModel):
                                                 self.dropout)
             self.elmo_embedding = tf.nn.dropout(self.elmo_embedding,
                                                 self.dropout)
+        elif self.config.elmo_2drop:
+            self.elmo_embedding = tf.nn.dropout(self.elmo_embedding,
+                                                self.dropout * self.dropout)
 
         word_embeddings = tf.concat([word_embeddings, self.elmo_embedding], axis=-1)
         self.word_embeddings = tf.nn.dropout(word_embeddings, self.dropout)
@@ -361,7 +365,8 @@ class NERModel(BaseModel):
 
                     stacked_rnn.append(cell_fw)
                     cell_bw = tf.contrib.rnn.DropoutWrapper(
-                        tf.contrib.rnn.GRUCell(self.config.hidden_size_gru), input_keep_prob=1,
+                        tf.contrib.rnn.GRUCell(self.config.hidden_size_gru),
+                        input_keep_prob=1,
                                                             output_keep_prob=1)
                     stacked_bw_rnn.append(cell_bw)
                 # cell_fw = tf.contrib.rnn.GRUCell(self.config.hidden_size_gru)
@@ -369,10 +374,12 @@ class NERModel(BaseModel):
             else:
                 for i in range(self.config.lstm_layers):
                     cell_fw = tf.contrib.rnn.DropoutWrapper(
-                        tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=1,
+                        tf.contrib.rnn.LSTMCell(
+                            self.config.hidden_size_lstm), input_keep_prob=1,
                                                             output_keep_prob=1)
                     cell_bw = tf.contrib.rnn.DropoutWrapper(
-                        tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm), input_keep_prob=1,
+                        tf.contrib.rnn.LSTMCell(
+                            self.config.hidden_size_lstm), input_keep_prob=1,
                                                             output_keep_prob=1)
                     stacked_rnn.append(cell_fw)
                     stacked_bw_rnn.append(cell_bw)

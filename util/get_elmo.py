@@ -1,5 +1,5 @@
 from config import Config
-
+import os
 
 def get_pre_embedding(mode):
     import h5py
@@ -12,6 +12,9 @@ def get_pre_embedding(mode):
         # return dev_emb
     elif mode == "train":
         f = h5py.File('data/elmo_train.embedding.h5', 'r')
+        return f
+    elif mode == "test":
+        f = h5py.File('data/elmo_test.embedding.h5', 'r')
         return f
         # train_emb = {}
         # for key in f.keys():
@@ -94,7 +97,7 @@ configs = {
         "lr_decay": 0.9,
         "clip": 5,
         # todo
-        "dir_output": "rayresults/elmo-offline-config6/"
+        "dir_output": "rayresults/elmo-offline-config6/",
     },
     "config7": {
         "nepochs": 100,
@@ -124,7 +127,10 @@ configs = {
         "clip": 0,
         "elmo_drop": True,
         # todo
-        "dir_output": "rayresults/elmo-offline-config9/"
+        "dir_output": "rayresults/elmo-offline-config9/",
+        # "pretrain_path": os.path.join(prefix,
+        # "elmo-offline-config9/model.weights/elmo-model2018-06-23-02-07")
+
     },
     "config10": {
         "nepochs": 100,
@@ -180,6 +186,62 @@ configs = {
         # todo
         "dir_output": "rayresults/elmo-offline-config14/"
     },
+
+    "config15": {
+        # simple cnn
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "clip": 5,
+        "elmo_drop": True,
+        "use_cnn": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config15/"
+    },
+
+    "config16": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config16/"
+    },
+
+    "config17": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 5,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config17/"
+    },
+
+    "config18": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        "elmo_2drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config18/"
+    },
+
+    # "config19": {
+    #     "nepochs": 100,
+    #     "lstm_layers": 2,
+    #     "reverse": False,
+    #     "lr_decay": 0.95,
+    #     "clip": 0,
+    #     # todo
+    #     "dir_output": "rayresults/elmo-offline-config19/"
+    # },
 
 }
 
