@@ -5,17 +5,47 @@ from tqdm import tqdm
 from .base_model import BaseModel
 from .data_utils import minibatches, pad_sequences, get_chunks
 from .general_utils import Progbar
+from util.get_elmo import get_outnet_feed_dict
+
+
+class ImportGraph():
+    """  Importing and running isolated TF graph """
+    def __init__(self, loc):
+        # Create local graph and use it in the session
+        self.graph = tf.Graph()
+        config = tf.ConfigProto(log_device_placement=False)
+        config.gpu_options.allow_growth = True
+        self.sess = tf.Session(graph=self.graph, config=config)
+        with self.graph.as_default():
+            # Import saved model from location 'loc' into local graph
+            saver = tf.train.import_meta_graph(loc + '.meta',
+                                               clear_devices=True)
+            saver.restore(self.sess, loc)
+            # There are TWO options how to get activation operation:
+              # FROM SAVED COLLECTION:
+            self.logits = self.graph.get_operation_by_name('proj/Reshape_1').outputs[0]
+            # self.activation = tf.get_collection('activation')[0]
+              # BY NAME:
+            # self.activation = self.graph.get_operation_by_name('activation_opt').outputs[0]
+
+    def run(self, fd):
+        """ Running the activation operation previously imported """
+        return self.sess.run([self.logits],
+                             feed_dict=fd)
+
 
 
 
 class NERModel(BaseModel):
     """Specialized class of Model for NER"""
 
-    def __init__(self, config):
-        tf.set_random_seed(1529457577)
+    def __init__(self, config, models):
+        # tf.set_random_seed(1529457577)
         super(NERModel, self).__init__(config)
         self.idx_to_tag = {idx: tag for tag, idx in
                            self.config.vocab_tags.items()}
+        self.models = models
+        self.num_models = len(models)
 
 
     def add_placeholders(self):
@@ -46,12 +76,34 @@ class NERModel(BaseModel):
         self.lr = tf.placeholder(dtype=tf.float32, shape=[],
                         name="lr")
 
+        #todo keep same, stay calm
         self.elmo_embedding = tf.placeholder(dtype=tf.float32, shape=[None, None, None],
                         name="lr")
 
         # self.max_length_word = tf.placeholder(dtype=tf.int32, shape=[],
         #                 name="max_length_word")
         # print(type(self.max_length_word))
+
+    def add_elmo_placeholders(self):
+        self.inputlogits = tf.placeholder(dtype=tf.float32,
+                                     shape=[self.num_models,
+                                            None, None,
+                                            self.config.ntags],
+                                     name="inputlogits")
+        # self.inputlogits = tf.placeholder(dtype=tf.float32,
+        #                                   shape=[None,
+        #                                          None, None,
+        #                                          None],
+        #                                   name="inputlogits")
+
+        self.labels = tf.placeholder(tf.int32, shape=[None, None],
+                                     name="labels")
+
+        self.sequence_lengths = tf.placeholder(tf.int32, shape=[None],
+                                               name="sequence_lengths")
+
+        self.lr = tf.placeholder(dtype=tf.float32, shape=[],
+                                 name="lr")
 
 
     def get_feed_dict(self, words, elmo_embedding, labels=None, lr=None,
@@ -131,6 +183,32 @@ class NERModel(BaseModel):
         # sequence_lengths: [12, 2, 5, 2, 12, 14, 5, 2, 2, 29, 4, 10, 10, 2, 18, 2, 2, 6, 8, 9]
         return feed, sequence_lengths
 
+
+
+
+    def get_elmo_feed_dict(self, words, elmo_embedding, labels=None, lr=None,
+                      dropout=None):
+        # print("words", words)
+        fd_out, _ = get_outnet_feed_dict(words, elmo_embedding,labels=labels,
+                                                  dropout=1.0)
+        result_logits = []
+
+        for model in self.models:
+            res = model.run(fd_out)
+            result_logits.append(res[0])
+            # print("res[0].shape", res[0].shape)
+        result_logits = np.array(result_logits)
+        feed = {}
+        # only once
+        feed[self.inputlogits] = result_logits
+        if labels is not None:
+            feed[self.labels] = fd_out["labels:0"]
+
+        feed[self.sequence_lengths] = fd_out["sequence_lengths:0"]
+
+        if lr is not None:
+            feed[self.lr] = lr
+        return feed,  feed[self.sequence_lengths]
 
     def add_word_embeddings_op(self):
         """Defines self.word_embeddings
@@ -445,7 +523,48 @@ class NERModel(BaseModel):
             output = tf.reshape(output, [-1, 2*self.config.hidden_size_lstm])
             pred = tf.matmul(output, W) + b
 
-            self.logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
+            self.logits = tf.reshape(pred, [-1, nsteps,
+                                                        self.config.ntags])
+
+    def add_elmo_logits_op(self):
+        with tf.variable_scope("ensemble"):
+            W = tf.get_variable("W", dtype=tf.float32,
+                                shape=[1,self.num_models],
+                                initializer=tf.ones_initializer())
+
+            normal_W = tf.nn.softmax(W)
+            s = tf.shape(self.inputlogits)
+
+            if self.config.use_tag_weight:
+                W_tag = tf.Variable(name="W_tag", dtype=tf.float32,
+                                    initial_value=np.identity(
+                                        self.config.ntags))
+                normal_W_tag = tf.nn.softmax(W_tag)
+                val_1 = tf.reshape(self.inputlogits, [-1, self.config.ntags])
+                w_tag_inputlogits = tf.matmul(val_1, normal_W_tag)
+                w_tag_inputlogits = tf.reshape(w_tag_inputlogits, s)
+                flat_logits = tf.reshape(w_tag_inputlogits, [self.num_models, -1])
+            else:
+                flat_logits = tf.reshape(self.inputlogits,
+                                         [self.num_models, -1])
+            # print("!!!!!!!!!!!!!!areyouok")
+            # print(tf.shape(normal_W))
+            # print(tf.shape(flat_logits))
+            s = tf.shape(self.inputlogits)
+            weighted_logits = tf.matmul(normal_W, flat_logits)
+            # print("!!!!!!!!!!!!!!areyouok")
+
+            weighted_logits_2 = tf.reshape(weighted_logits,
+                                         [s[1], -1,
+                                          self.config.ntags])
+
+            # print("!!!!!!!!!!!!!!areyouok")
+
+            self.logits = weighted_logits_2
+            # self.logits = []
+            # for i in range(0, self.num_models):
+            #     self.logits += tf.scalar_mul(tf.squeeze(normal_W[i]),
+            #                                  self.inputlogits[i])
 
 
     def add_pred_op(self):
@@ -468,7 +587,13 @@ class NERModel(BaseModel):
         if self.config.use_crf:
             log_likelihood, trans_params = tf.contrib.crf.crf_log_likelihood(
                     self.logits, self.labels, self.sequence_lengths)
-            self.trans_params = trans_params # need to evaluate it for decoding
+            self.trans_params = trans_params #
+            # need to
+            # evaluate
+            # it for decoding
+            # self.trans_params = (self.trans_params,
+            #                                 name="areyounotok")
+
             self.loss = tf.reduce_mean(-log_likelihood)
         else:
             losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -492,9 +617,15 @@ class NERModel(BaseModel):
         # tf.reset_default_graph()
         # NER specific functions
 
-        self.add_placeholders()
-        self.add_word_embeddings_op()
-        self.add_logits_op()
+        # todo
+        if not self.config.ensemble:
+            self.add_placeholders()
+            self.add_word_embeddings_op()
+            self.add_logits_op()
+        else:
+            self.add_elmo_placeholders()
+            self.add_elmo_logits_op()
+
         self.add_pred_op()
         self.add_loss_op()
 
@@ -517,9 +648,13 @@ class NERModel(BaseModel):
 
         """
         # prepare data
-        fd, sequence_lengths = self.get_feed_dict(words, elmo_embedding,
+        if not self.config.ensemble:
+            fd, sequence_lengths = self.get_feed_dict(words, elmo_embedding,
                                                   dropout=1.0)
-
+        else:
+            fd, sequence_lengths = self.get_elmo_feed_dict(words,
+                                                           elmo_embedding,
+                                                           dropout=1.0)
         if self.config.use_crf:
             # get tag scores and transition params of CRF
             viterbi_sequences = []
@@ -562,7 +697,7 @@ class NERModel(BaseModel):
         # hack it
         # nbatches = (len(train) + batch_size - 1) // batch_size
         nbatches = (11421 + batch_size - 1) // batch_size
-        # nbatches = (11421 + batch_size - 1) // batch_size
+        # nbatches = (20 + batch_size - 1) // batch_size
 
         prog = Progbar(target=nbatches)
 
@@ -570,13 +705,22 @@ class NERModel(BaseModel):
         for i, (words, labels) in enumerate(minibatches(train,
                                                              batch_size)):
             # print("hahaha, I got it!!!!!!!!!")
+            # print("!!!!!, words", words)
             elmo_embedding = train_embeddings[str(i)][:].tolist()
-            fd, _ = self.get_feed_dict(words, elmo_embedding, labels,
-                                       self.config.lr,
-                    self.config.dropout)
+            if not self.config.ensemble:
+                # print("!!!! use normal feed_dict")
+                fd, _ = self.get_feed_dict(words, elmo_embedding, labels,
+                                           self.config.lr,
+                        self.config.dropout)
+            else:
+                # print("???? use ensemble feed_dict")
+                fd, _ = self.get_elmo_feed_dict(words, elmo_embedding, labels,
+                                           self.config.lr,
+                                           self.config.dropout)
 
             _, train_loss, summary = self.sess.run(
                     [self.train_op, self.loss, self.merged], feed_dict=fd)
+
 
             prog.update(i + 1, [("train loss", train_loss)])
 
@@ -586,7 +730,11 @@ class NERModel(BaseModel):
             # if i % 100 == 0:
             #     self.file_writer.flush()
 
+
+        print("begin eval!!!!")
+        # todo back it
         metrics = self.run_evaluate(dev, dev_embeddings)
+        print("end eval!!!!")
 
         summary = tf.Summary()
         summary.value.add(tag="acc", simple_value=metrics["acc"])
@@ -612,6 +760,7 @@ class NERModel(BaseModel):
             metrics: (dict) metrics["acc"] = 98.4, ...
 
         """
+
         accs = []
         correct_preds, total_correct, total_preds = 0., 0., 0.
         for idx, (words, labels) in enumerate(minibatches(test,
@@ -666,8 +815,8 @@ class NERModel(BaseModel):
 
     def tmp(self, test, elmo_embeddings, outfile="result.txt"):
         fout = open(outfile, "w+")
-        for idx, (words, labels) in enumerate(minibatches(test, \
-                self.config.batch_size)):
+        for idx, (words, labels) in tqdm(enumerate(minibatches(test, \
+                self.config.batch_size))):
             elmo_embedding = elmo_embeddings[str(idx)]
             labels_pred, prob_pred, _ = self.predict_batch(words,
                                                            elmo_embedding,

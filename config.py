@@ -62,8 +62,7 @@ class Config():
         # npzfile = np.load(train_file)
         # self.train_embeddings =
 
-
-
+    ensemble = False
     # general config
     file_name = os.path.basename(__file__)
     # attention! it is static
@@ -171,6 +170,8 @@ class Config():
     elmo_drop = False
     elmo_drop_drop = False
     elmo_2drop = False
+
+    use_tag_weight = False
 
 
     decay_mode = "normal" #normal, none, greedy, greedy-half, 4normal

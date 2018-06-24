@@ -259,6 +259,7 @@ def static_elmo_pretrain(config_name, dataset, embeddings, outfile):
 
     model = NERModel(config_class)
     model.build()
+
     prefix = os.path.join("/SSD1/yinghong/tmp/s_t_elmo/",configs[
         config_name]["dir_output"])
     pretrain_path = os.path.join(prefix, "model.weights")
@@ -354,7 +355,7 @@ if __name__ == "__main__":
     # creat trim
     # dev_name = "dev.eval"
     # extract_data(dev_name)
-    mode = "dev"
+    mode = "test"
 
 
     from config import Config
@@ -374,7 +375,6 @@ if __name__ == "__main__":
     elif mode == "test":
         dataset = test
         save_path = "submit"
-
     # config_name = "config13"
     idx_set = [1,2,3,7,8,9,10,11,12,13,14,16,17,18]
     for idx in idx_set:

@@ -215,13 +215,59 @@ def main():
 
 
 def justmain():
+    from model.ner_model import ImportGraph
+    modelname_9 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                  "-config9/model.weights/elmo-model2018-06-23-02-07"
+
+    modelname_13 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                   "-config13/model.weights/elmo-model2018-06-23-02-08"
+    #
+    # modelname_1 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config1/model.weights/elmo-model2018-06-22-21-02"
+    #
+    # modelname_8 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config8/model.weights/elmo-model2018-06-22-21-39"
+    # modelname_7 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config7/model.weights/elmo-model2018-06-22-21-45"
+    # modelname_2 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config2/model.weights/elmo-model2018-06-22-20-00"
+    # modelname_10 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config10/model.weights/elmo-model2018-06-22-22-48"
+    # modelname_12 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config12/model.weights/elmo-model2018-06-23-00-48"
+    # model_names = [modelname_9, modelname_13, modelname_1, modelname_8, modelname_7
+    #                , modelname_2, modelname_10, modelname_12]
+
+    model_names = [modelname_9, modelname_13]
+    models = []
+    # all_config = [build_conf(configs["config9"]), build_conf(configs[
+    #                                                              "config9"])]
+
+    for name in model_names:
+        tmp_model = ImportGraph(name)
+        models.append(tmp_model)
+
+
+
     # todo
-    config_name = "config18"
+    config_name = "config-ensem-6"
+    # config_name = "config19"
     config = build_conf(configs[config_name])
+    setattr(config, "ensemble", True)
     print(config_name)
     from model.ner_model import NERModel
-    model = NERModel(config)
+    model = NERModel(config, models)
+
+
     model.build()
+
+    import os
+    prefix = os.path.join("/SSD1/yinghong/tmp/s_t_elmo/", configs[
+        config_name]["dir_output"])
+    pretrain_path = os.path.join(prefix, "model.weights")
+    # model.restore_session(configs[config_name]["pretrain_path"])
+    # model.restore_session(pretrain_path)
+
     dev = CoNLLDataset(config.filename_dev,
                        config.processing_word,
                        config.processing_tag,
@@ -241,5 +287,124 @@ def justmain():
     model.train(train, dev, train_embeddings, dev_embeddings)
 
 
+
+def justonemain():
+    # todo
+    config_name = "config18"
+    # config_name = "config19"
+    config = build_conf(configs[config_name])
+    setattr(config, "ensemble", False)
+    print(config_name)
+    from model.ner_model import NERModel
+    model = NERModel(config, models=[])
+
+    model.build()
+
+    import os
+    prefix = os.path.join("/SSD1/yinghong/tmp/s_t_elmo/", configs[
+        config_name]["dir_output"])
+    pretrain_path = os.path.join(prefix, "model.weights")
+    # model.restore_session(configs[config_name]["pretrain_path"])
+    # model.restore_session(pretrain_path)
+
+    dev = CoNLLDataset(config.filename_dev,
+                       config.processing_word,
+                       config.processing_tag,
+                       config.max_iter)
+    train = CoNLLDataset(config.filename_train,
+                         config.processing_word,
+                         config.processing_tag,
+                         config.max_iter)
+    # MODE = {
+    #     'dev': dev,
+    #     'train': train
+    # }
+    #
+    # mode = 'train'
+    train_embeddings = get_pre_embedding('train')
+    dev_embeddings = get_pre_embedding('dev')
+    model.train(train, dev, train_embeddings, dev_embeddings)
+
+def justpredict():
+    from model.ner_model import ImportGraph
+    modelname_9 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                  "-config9/model.weights/elmo-model2018-06-23-02-07"
+
+    modelname_13 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                   "-config13/model.weights/elmo-model2018-06-23-02-08"
+
+    modelname_1 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                  "-config1/model.weights/elmo-model2018-06-22-21-02"
+    #
+    modelname_8 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                   "-config8/model.weights/elmo-model2018-06-22-21-39"
+    modelname_7 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+                   "-config7/model.weights/elmo-model2018-06-22-21-45"
+    # modelname_2 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config2/model.weights/elmo-model2018-06-22-20-00"
+    # modelname_10 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config10/model.weights/elmo-model2018-06-22-22-48"
+    # modelname_12 = "/SSD1/yinghong/tmp/s_t_elmo/rayresults/elmo-offline" \
+    #                "-config12/model.weights/elmo-model2018-06-23-00-48"
+    # model_names = [modelname_9, modelname_13, modelname_1, modelname_8, modelname_7
+    #                , modelname_2, modelname_10, modelname_12]
+
+    model_names = [modelname_9, modelname_13, modelname_1, modelname_8, modelname_7]
+    models = []
+    # all_config = [build_conf(configs["config9"]), build_conf(configs[
+    #                                                              "config9"])]
+
+    for name in model_names:
+        tmp_model = ImportGraph(name)
+        models.append(tmp_model)
+
+    # todo
+    config_name = "config-ensem-2"
+    # config_name = "config19"
+    config = build_conf(configs[config_name])
+    setattr(config, "ensemble", True)
+    print(config_name)
+    from model.ner_model import NERModel
+    model = NERModel(config, models)
+
+    model.build()
+
+    import os
+    prefix = os.path.join("/SSD1/yinghong/tmp/s_t_elmo/", configs[
+        config_name]["dir_output"])
+    pretrain_path = os.path.join(prefix, "model.weights")
+    # model.restore_session(configs[config_name]["pretrain_path"])
+    model.restore_session(pretrain_path)
+
+    dev = CoNLLDataset(config.filename_dev,
+                       config.processing_word,
+                       config.processing_tag,
+                       config.max_iter)
+    train = CoNLLDataset(config.filename_train,
+                         config.processing_word,
+                         config.processing_tag,
+                         config.max_iter)
+    test = CoNLLDataset(config.filename_test,
+                         config.processing_word,
+                         config.processing_tag,
+                         config.max_iter, test=True)
+    # MODE = {
+    #     'dev': dev,
+    #     'train': train
+    # }
+    #
+    # mode = 'train'
+    # train_embeddings = get_pre_embedding('train')
+    # dev_embeddings = get_pre_embedding('dev')
+    test_embeddings = get_pre_embedding('test')
+
+    model.tmp(test, test_embeddings, outfile=config_name + "-" + "test" +
+                                           ".predict")
+
+    # model.train(train, dev, train_embeddings, dev_embeddings)
+
 if __name__ == "__main__":
     justmain()
+    # justpredict()
+    # justonemain()
+    # ensemblemain()

@@ -100,7 +100,7 @@ class BaseModel(object):
         import datetime
         # todo no date
         date_str = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
-        if not os.path.exists(self.config.dir_model+date_str):
+        if not os.path.exists(self.config.dir_model):
             os.makedirs(self.config.dir_model)
         # if not os.path.exists(self.config.dir_model):
         #     os.makedirs(self.config.dir_model)

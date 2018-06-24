@@ -232,7 +232,100 @@ configs = {
         # todo
         "dir_output": "rayresults/elmo-offline-config18/"
     },
+    "config19": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config19/"
+    },
+    "config20": {
+        # fail
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/elmo-offline-config20/",
+        # "pretrain_path": os.path.join(prefix,
+        # "elmo-offline-config9/model.weights/elmo-model2018-06-23-02-07")
 
+    },
+    "config-ensem-1": {
+        # 3 models
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "lr": 0.01,
+        "clip": 0,
+        "elmo_2drop": True,
+        # todo
+        "dir_output": "rayresults/config-ensem-1/"
+    },
+    "config-ensem-2": {
+        # 5 models
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "lr": 0.01,
+        "clip": 0,
+        "elmo_2drop": True,
+        # todo
+        "dir_output": "rayresults/config-ensem-2/"
+    },
+    "config-ensem-3": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "lr": 0.01,
+        "clip": 0,
+        "elmo_2drop": True,
+        # todo
+        "dir_output": "rayresults/config-ensem-3/"
+    },
+    "config-ensem-4": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.8,
+        "lr": 0.01,
+        "clip": 0,
+        "elmo_2drop": True,
+        # todo
+        "dir_output": "rayresults/config-ensem-4/"
+    },
+    "config-ensem-5": {
+        "nepochs": 100,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.9,
+        "lr": 0.01,
+        "clip": 0,
+        "elmo_2drop": True,
+        # todo
+        "dir_output": "rayresults/config-ensem-5/"
+    },
+    "config-ensem-6": {
+        "nepochs": 100,
+        "use_tag_weight": True,
+        "lstm_layers": 2,
+        "reverse": False,
+        "lr_decay": 0.95,
+        "clip": 0,
+        "elmo_drop": True,
+        # todo
+        "dir_output": "rayresults/config-ensem-6",
+        # "pretrain_path": os.path.join(prefix,
+        # "elmo-offline-config9/model.weights/elmo-model2018-06-23-02-07")
+
+    },
     # "config19": {
     #     "nepochs": 100,
     #     "lstm_layers": 2,
@@ -245,3 +338,54 @@ configs = {
 
 }
 
+
+from model.data_utils import pad_sequences
+def get_outnet_feed_dict(words, elmo_embedding, labels=None, lr=None,
+                         dropout=None):
+    """Given some data, pad it and build a feed dictionary
+
+    Args:
+        words: list of sentences. A sentence is a list of ids of a list of
+            words. A word is a list of ids
+        labels: list of ids
+        lr: (float) learning rate
+        dropout: (float) keep prob
+
+    Returns:
+        dict {placeholder: value}
+
+    """
+    # config = Config()
+    # perform padding of the given data
+    # config = {}
+    use_chars = True
+    if use_chars:
+        # yes
+        char_ids, word_ids = zip(*words)
+        word_ids, sequence_lengths = pad_sequences(word_ids, 0)
+        char_ids, word_lengths = pad_sequences(char_ids, pad_tok=0,
+                                               nlevels=2)
+    else:
+        word_ids, sequence_lengths = pad_sequences(words, 0)
+
+    feed = {
+        "word_ids:0": word_ids,
+        "sequence_lengths:0": sequence_lengths,
+        "lr_1:0": elmo_embedding
+    }
+
+    if use_chars:
+        feed["char_ids:0"] = char_ids
+        feed["word_lengths:0"] = word_lengths
+
+    if labels is not None:
+        labels, _ = pad_sequences(labels, 0)
+        feed["labels:0"] = labels
+
+    if lr is not None:
+        feed["lr:0"] = lr
+
+    if dropout is not None:
+        feed["dropout:0"] = dropout
+
+    return feed, sequence_lengths
